@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  node1:
+    build: .
+    container_name: node1
+    ports:
+      - "50051:50051"
+    environment:
+      - NODE_ID=node1
+    networks:
+      - omninet
+
+  node2:
+    build: .
+    container_name: node2
+    ports:
+      - "50052:50051"
+    environment:
+      - NODE_ID=node2
+    networks:
+      - omninet
+
+  node3:
+    build: .
+    container_name: node3
+    ports:
+      - "50053:50051"
+    environment:
+      - NODE_ID=node3
+    networks:
+      - omninet
+
+networks:
+  omninet:
+    driver: bridge
