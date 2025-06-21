@@ -1,1 +1,22 @@
 
+# Use Go 1.24.4 image
+FROM golang:1.24.4
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy dependency files first and download Go modules
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of the project files
+COPY . .
+
+# Build the Go project (adjust ./cmd if your main.go is elsewhere)
+RUN go build -o server ./cmd
+
+# Expose the port your gRPC server will listen on
+EXPOSE 50051
+
+# Run the built server binary when the container starts
+CMD ["./server"]
