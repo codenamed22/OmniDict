@@ -36,12 +36,12 @@ message GetResponse {
 
 // Request/Response messages for Join operation
 message JoinRequest {
-  NodeInfo node_info = 1;
+  string node_name = 1;   // Add this line
+  string node_address = 2; // Optional if using address
 }
 
 message JoinResponse {
-  bool success = 1;
-  repeated NodeInfo cluster_nodes = 2;
+  bool accepted = 1;      // Add this line
 }
 
 // Node information
