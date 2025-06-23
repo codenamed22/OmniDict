@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.12.4
-// source: proto/kv.proto
+// source: kv.proto
 
-package proto
+package __
 
 import (
 	context "context"
@@ -19,21 +19,33 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	KVStore_Put_FullMethodName  = "/kvstore.KVStore/Put"
-	KVStore_Get_FullMethodName  = "/kvstore.KVStore/Get"
-	KVStore_Join_FullMethodName = "/kvstore.KVStore/Join"
+	KVStore_Delete_FullMethodName = "/kvstore.KVStore/Delete"
+	KVStore_Exists_FullMethodName = "/kvstore.KVStore/Exists"
+	KVStore_Expire_FullMethodName = "/kvstore.KVStore/Expire"
+	KVStore_Flush_FullMethodName  = "/kvstore.KVStore/Flush"
+	KVStore_Get_FullMethodName    = "/kvstore.KVStore/Get"
+	KVStore_Keys_FullMethodName   = "/kvstore.KVStore/Keys"
+	KVStore_Put_FullMethodName    = "/kvstore.KVStore/Put"
+	KVStore_Ttl_FullMethodName    = "/kvstore.KVStore/Ttl"
+	KVStore_Update_FullMethodName = "/kvstore.KVStore/Update"
+	KVStore_Join_FullMethodName   = "/kvstore.KVStore/Join"
 )
 
 // KVStoreClient is the client API for KVStore service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// The KV Store service definition
 type KVStoreClient interface {
 	// Basic operations
-	Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error)
+	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
+	Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error)
+	Expire(ctx context.Context, in *ExpireRequest, opts ...grpc.CallOption) (*ExpireResponse, error)
+	Flush(ctx context.Context, in *FlushRequest, opts ...grpc.CallOption) (*FlushResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
-	// Cluster management
+	Keys(ctx context.Context, in *KeysRequest, opts ...grpc.CallOption) (*KeysResponse, error)
+	Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error)
+	Ttl(ctx context.Context, in *TtlRequest, opts ...grpc.CallOption) (*TtlResponse, error)
+	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error)
+	// Cluster management operations
 	Join(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error)
 }
 
@@ -43,6 +55,66 @@ type kVStoreClient struct {
 
 func NewKVStoreClient(cc grpc.ClientConnInterface) KVStoreClient {
 	return &kVStoreClient{cc}
+}
+
+func (c *kVStoreClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteResponse)
+	err := c.cc.Invoke(ctx, KVStore_Delete_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVStoreClient) Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExistsResponse)
+	err := c.cc.Invoke(ctx, KVStore_Exists_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVStoreClient) Expire(ctx context.Context, in *ExpireRequest, opts ...grpc.CallOption) (*ExpireResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExpireResponse)
+	err := c.cc.Invoke(ctx, KVStore_Expire_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVStoreClient) Flush(ctx context.Context, in *FlushRequest, opts ...grpc.CallOption) (*FlushResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FlushResponse)
+	err := c.cc.Invoke(ctx, KVStore_Flush_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVStoreClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetResponse)
+	err := c.cc.Invoke(ctx, KVStore_Get_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVStoreClient) Keys(ctx context.Context, in *KeysRequest, opts ...grpc.CallOption) (*KeysResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(KeysResponse)
+	err := c.cc.Invoke(ctx, KVStore_Keys_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *kVStoreClient) Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error) {
@@ -55,10 +127,20 @@ func (c *kVStoreClient) Put(ctx context.Context, in *PutRequest, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *kVStoreClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+func (c *kVStoreClient) Ttl(ctx context.Context, in *TtlRequest, opts ...grpc.CallOption) (*TtlResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, KVStore_Get_FullMethodName, in, out, cOpts...)
+	out := new(TtlResponse)
+	err := c.cc.Invoke(ctx, KVStore_Ttl_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVStoreClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateResponse)
+	err := c.cc.Invoke(ctx, KVStore_Update_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,13 +160,18 @@ func (c *kVStoreClient) Join(ctx context.Context, in *JoinRequest, opts ...grpc.
 // KVStoreServer is the server API for KVStore service.
 // All implementations must embed UnimplementedKVStoreServer
 // for forward compatibility.
-//
-// The KV Store service definition
 type KVStoreServer interface {
 	// Basic operations
-	Put(context.Context, *PutRequest) (*PutResponse, error)
+	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
+	Exists(context.Context, *ExistsRequest) (*ExistsResponse, error)
+	Expire(context.Context, *ExpireRequest) (*ExpireResponse, error)
+	Flush(context.Context, *FlushRequest) (*FlushResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
-	// Cluster management
+	Keys(context.Context, *KeysRequest) (*KeysResponse, error)
+	Put(context.Context, *PutRequest) (*PutResponse, error)
+	Ttl(context.Context, *TtlRequest) (*TtlResponse, error)
+	Update(context.Context, *UpdateRequest) (*UpdateResponse, error)
+	// Cluster management operations
 	Join(context.Context, *JoinRequest) (*JoinResponse, error)
 	mustEmbedUnimplementedKVStoreServer()
 }
@@ -96,11 +183,32 @@ type KVStoreServer interface {
 // pointer dereference when methods are called.
 type UnimplementedKVStoreServer struct{}
 
-func (UnimplementedKVStoreServer) Put(context.Context, *PutRequest) (*PutResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Put not implemented")
+func (UnimplementedKVStoreServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedKVStoreServer) Exists(context.Context, *ExistsRequest) (*ExistsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Exists not implemented")
+}
+func (UnimplementedKVStoreServer) Expire(context.Context, *ExpireRequest) (*ExpireResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Expire not implemented")
+}
+func (UnimplementedKVStoreServer) Flush(context.Context, *FlushRequest) (*FlushResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Flush not implemented")
 }
 func (UnimplementedKVStoreServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedKVStoreServer) Keys(context.Context, *KeysRequest) (*KeysResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Keys not implemented")
+}
+func (UnimplementedKVStoreServer) Put(context.Context, *PutRequest) (*PutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Put not implemented")
+}
+func (UnimplementedKVStoreServer) Ttl(context.Context, *TtlRequest) (*TtlResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ttl not implemented")
+}
+func (UnimplementedKVStoreServer) Update(context.Context, *UpdateRequest) (*UpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
 func (UnimplementedKVStoreServer) Join(context.Context, *JoinRequest) (*JoinResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Join not implemented")
@@ -126,20 +234,74 @@ func RegisterKVStoreServer(s grpc.ServiceRegistrar, srv KVStoreServer) {
 	s.RegisterService(&KVStore_ServiceDesc, srv)
 }
 
-func _KVStore_Put_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PutRequest)
+func _KVStore_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(KVStoreServer).Put(ctx, in)
+		return srv.(KVStoreServer).Delete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: KVStore_Put_FullMethodName,
+		FullMethod: KVStore_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KVStoreServer).Put(ctx, req.(*PutRequest))
+		return srv.(KVStoreServer).Delete(ctx, req.(*DeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVStore_Exists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExistsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVStoreServer).Exists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KVStore_Exists_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVStoreServer).Exists(ctx, req.(*ExistsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVStore_Expire_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExpireRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVStoreServer).Expire(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KVStore_Expire_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVStoreServer).Expire(ctx, req.(*ExpireRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVStore_Flush_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FlushRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVStoreServer).Flush(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KVStore_Flush_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVStoreServer).Flush(ctx, req.(*FlushRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -158,6 +320,78 @@ func _KVStore_Get_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(KVStoreServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVStore_Keys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVStoreServer).Keys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KVStore_Keys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVStoreServer).Keys(ctx, req.(*KeysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVStore_Put_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVStoreServer).Put(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KVStore_Put_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVStoreServer).Put(ctx, req.(*PutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVStore_Ttl_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TtlRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVStoreServer).Ttl(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KVStore_Ttl_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVStoreServer).Ttl(ctx, req.(*TtlRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVStore_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVStoreServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KVStore_Update_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVStoreServer).Update(ctx, req.(*UpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -188,12 +422,40 @@ var KVStore_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*KVStoreServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Put",
-			Handler:    _KVStore_Put_Handler,
+			MethodName: "Delete",
+			Handler:    _KVStore_Delete_Handler,
+		},
+		{
+			MethodName: "Exists",
+			Handler:    _KVStore_Exists_Handler,
+		},
+		{
+			MethodName: "Expire",
+			Handler:    _KVStore_Expire_Handler,
+		},
+		{
+			MethodName: "Flush",
+			Handler:    _KVStore_Flush_Handler,
 		},
 		{
 			MethodName: "Get",
 			Handler:    _KVStore_Get_Handler,
+		},
+		{
+			MethodName: "Keys",
+			Handler:    _KVStore_Keys_Handler,
+		},
+		{
+			MethodName: "Put",
+			Handler:    _KVStore_Put_Handler,
+		},
+		{
+			MethodName: "Ttl",
+			Handler:    _KVStore_Ttl_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _KVStore_Update_Handler,
 		},
 		{
 			MethodName: "Join",
@@ -201,5 +463,5 @@ var KVStore_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/kv.proto",
+	Metadata: "kv.proto",
 }
