@@ -35,8 +35,12 @@ func (s *server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 
 // Join handles cluster join requests (stubbed for now).
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
-	fmt.Printf("Join request from node: %s\n", req.NodeName)
-	return &pb.JoinResponse{Accepted: true}, nil
+	fmt.Printf("Join request from node: %s @ %s\n", req.NodeInfo.Id, req.NodeInfo.Address)
+
+	return &pb.JoinResponse{
+		Success:      true,
+		ClusterNodes: []*pb.NodeInfo{}, // optional: return known cluster nodes
+	}, nil
 }
 
 func main() {
