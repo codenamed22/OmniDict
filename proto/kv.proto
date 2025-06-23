@@ -1,51 +1,76 @@
 syntax = "proto3";
 
 package kvstore;
-option go_package = "kvstore/proto";
 
-// The KV Store service definition
+// This line tells protoc where to place generated Go files and their import path
+option go_package = "./proto";
+
+
+
+// =============================
+//        KV Store Service
+// =============================
+
 service KVStore {
   // Basic operations
-  rpc Put(PutRequest) returns (PutResponse);
-  rpc Get(GetRequest) returns (GetResponse);
+  rpc Put (PutRequest) returns (PutResponse);
+  rpc Get (GetRequest) returns (GetResponse);
   
-  // Cluster management
-  rpc Join(JoinRequest) returns (JoinResponse);
+  // Cluster management operations
+  rpc Join (JoinRequest) returns (JoinResponse);
 }
 
-// Request/Response messages for Put operation
+
+// =============================
+//      Put/Get Operations
+// =============================
+
+// Request for putting a key-value pair
 message PutRequest {
   string key = 1;
   string value = 2;
 }
 
+// Response after putting a key-value pair
 message PutResponse {
   bool success = 1;
-  string error = 2;
+  string error = 2; // optional error message
 }
 
-// Request/Response messages for Get operation
+// Request for fetching a key
 message GetRequest {
   string key = 1;
 }
 
+// Response after fetching a key
 message GetResponse {
   string value = 1;
   bool found = 2;
 }
 
-// Request/Response messages for Join operation
+
+// =============================
+//     Cluster Join Operation
+// =============================
+
+// Request sent by a new node joining the cluster
 message JoinRequest {
   NodeInfo node_info = 1;
 }
 
+// Response after a node joins, listing the full cluster
 message JoinResponse {
   bool success = 1;
   repeated NodeInfo cluster_nodes = 2;
 }
 
-// Node information
+
+// =============================
+//        Node Information
+// =============================
+
+// Represents a single node in the cluster
 message NodeInfo {
-  string id = 1;
-  string address = 2;
+  string id = 1;       // unique node identifier
+  string address = 2;  // IP:port format
 }
