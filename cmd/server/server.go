@@ -53,7 +53,7 @@ func main() {
 	selfID := "node1" // This would be unique per instance
 	nodeAddr := ":50051"
 
-	hashRing := ring.NewHashRing(3) // Create a new hash ring with 3 replicas (virtual nodes)
+	hashRing := ring.NewHashRing(3) // Create a new hash ring with 3 virtual nodes per physical node
 	// Add this node to the hash ring
 	hashRing.AddNode(selfID)
 
