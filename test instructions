@@ -1,0 +1,5 @@
+go run main.go server - runs the server in one terminal
+open another terminal as the client and run functions like - 
+./omnidict put key value
+./omnidict get -h (-h will give help like the man pages in your normal cmd)
+if there is any problem do tell me :P
