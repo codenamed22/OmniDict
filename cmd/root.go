@@ -16,13 +16,13 @@ func Execute() {
 
 func init() {
 	// Add all subcommands here
-	rootCmd.AddCommand(deleteCmd)
-	rootCmd.AddCommand(existsCmd)
-	rootCmd.AddCommand(expireCmd)
-	rootCmd.AddCommand(flushCmd)
-	rootCmd.AddCommand(getCmd)
-	rootCmd.AddCommand(keysCmd)
-	rootCmd.AddCommand(putCmd)
-	rootCmd.AddCommand(ttlCmd)
-	rootCmd.AddCommand(updateCmd)
+	// rootCmd.AddCommand(deleteCmd)
+	// rootCmd.AddCommand(existsCmd)
+	// rootCmd.AddCommand(expireCmd)
+	// rootCmd.AddCommand(flushCmd)
+	// rootCmd.AddCommand(getCmd)
+	// rootCmd.AddCommand(keysCmd)
+	// rootCmd.AddCommand(putCmd)
+	// rootCmd.AddCommand(ttlCmd)
+	// rootCmd.AddCommand(updateCmd)
 }
