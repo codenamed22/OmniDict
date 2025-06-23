@@ -1,6 +1,12 @@
 package main
 
-import "omnidict/cmd" // ⚠ May need to change this — see below
+import (
+	"omnidict/client"
+	"omnidict/cmd"
+)
+
 func main() {
+	client.InitGRPCClient()
+	defer client.Conn.Close()
 	cmd.Execute()
 }
