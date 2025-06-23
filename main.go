@@ -1,6 +1,6 @@
 package main
 
-import "omnidict/cmd" // ⚠ May need to change this — see below
+import "omnidict/cmd"
 func main() {
 	cmd.Execute()
 }
