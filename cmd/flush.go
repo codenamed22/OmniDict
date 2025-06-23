@@ -1,32 +1,26 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/spf13/cobra"
-
-	// 🧠 Uncomment when using real gRPC
 	"context"
+	"log"
+
 	"omnidict/client"
-	pb "omnidict/proto"
+	"omnidict/proto"
+
+	"github.com/spf13/cobra"
 )
 
 var flushCmd = &cobra.Command{
 	Use:   "flush",
-	Short: "Delete all keys (dangerous!)",
+	Short: "Clear all keys",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		// ✅ MOCK version (for now)
-		// fmt.Println("[MOCK] All keys flushed")
-
-		
-		// 🔌 Real gRPC version (uncomment this when gRPC is active)
-
-		_, err := client.GrpcClient.Flush(context.Background(), &pb.FlushRequest{})
+		req := &proto.FlushRequest{}
+		resp, err := client.Client.Flush(context.Background(), req)
 		if err != nil {
-			fmt.Printf("❌ Failed to flush keys: %v\n", err)
-			return
+			log.Fatalf("Flush failed: %v", err)
 		}
-		fmt.Println("✅ All keys flushed successfully")
-		
+		log.Printf("Flush: %v", resp)
 	},
 }
 

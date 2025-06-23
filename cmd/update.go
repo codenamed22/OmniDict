@@ -1,40 +1,29 @@
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"log"
+
+	"omnidict/client"
+	"omnidict/proto"
 
 	"github.com/spf13/cobra"
-	// 🧠 Uncomment when enabling gRPC
-	"context"
-	"omnidict/client"
-	pb "omnidict/proto"
 )
 
 var updateCmd = &cobra.Command{
-	Use:   "update <key> <value>",
-	Short: "Update the value for an existing key",
+	Use:   "update [key] [value]",
+	Short: "Update an existing key",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
-		newVal := args[1]
-
-		// ✅ MOCK version (for now)
-		// Assume key exists and simulate update
-		// fmt.Printf("[MOCK] Updated key '%s' with new value '%s'\n", key, newVal)
-
-		
-		// 	🔌 Real gRPC version (uncomment when backend is ready)
-
-			_, err := client.GrpcClient.Update(context.Background(), &pb.UpdateRequest{
-				Key:   key,
-				Value: newVal,
-			})
-			if err != nil {
-				fmt.Printf("❌ Failed to update key '%s': %v\n", key, err)
-				return
-			}
-			fmt.Printf("✅ Updated key '%s' with new value '%s'\n", key, newVal)
-		
+		req := &proto.UpdateRequest{
+			Key:   args[0],
+			Value: args[1],
+		}
+		resp, err := client.Client.Update(context.Background(), req)  // Changed from client.GrpcClient to client.Client
+		if err != nil {
+			log.Fatalf("Update failed: %v", err)
+		}
+		log.Printf("Update: %v", resp)
 	},
 }
 

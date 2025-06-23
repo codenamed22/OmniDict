@@ -1,64 +1,38 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/spf13/cobra"
-	"omnidict/client"
-	// "omnidict/proto"
-	"strconv"
 	"context"
+	"log"
+
+	"omnidict/client"
+	"omnidict/proto"
+
+	"github.com/spf13/cobra"
 )
 
 var testCmd = &cobra.Command{
-	Use:   "test [step] [message]",
-	Short: "Test gRPC connection and integration",
-	Long:  "Test function to verify gRPC connectivity and track integration progress",
-	Args:  cobra.MaximumNArgs(2),
+	Use:   "test [message]",
+	Short: "Test server connectivity",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// Default values
-		step := int32(1)
-		message := "integration test"
-
-		// Parse step if provided
-		if len(args) >= 1 {
-			if stepStr, err := strconv.Atoi(args[0]); err == nil {
-				step = int32(stepStr)
-			}
+		// Use a simple Put/Get test instead of non-existent TestRequest
+		req := &proto.PutRequest{
+			Key:   "test_key",
+			Value: args[0],
 		}
-
-		// Use custom message if provided
-		if len(args) >= 2 {
-			message = args[1]
-		}
-
-		// 🟢 MOCK version (for now)
-		// fmt.Printf("✅ [MOCK] Test Step %d: %s - Connection OK\n", step, message)
-
-		// 📡 Real gRPC version (uncomment this when gRPC server is ready)
-		grpcClient, err := client.InitGRPCClient()
+		resp, err := client.Client.Put(context.Background(), req)
 		if err != nil {
-			fmt.Printf("❌ Failed to connect to gRPC server: %v\n", err)
-			return
+			log.Fatalf("Test failed: %v", err)
 		}
-		defer grpcClient.Close()
-
-		// Create the proper TestRequest
-		req := &proto.TestRequest{
-			Message: message,
-			Step:    step,
-		}
-
-		// Call the Test method with proper context
-		ctx := context.Background()
-		resp, err := grpcClient.Test(ctx, req)
+		log.Printf("Test result: %v", resp)
+		
+		// Test retrieval
+		getReq := &proto.GetRequest{Key: "test_key"}
+		getResp, err := client.Client.Get(context.Background(), getReq)
 		if err != nil {
-			fmt.Printf("❌ [CLIENT] gRPC call failed: %v\n", err)
-			return
+			log.Fatalf("Test get failed: %v", err)
 		}
-
-		fmt.Printf("✅ Test Step %d: %s\n", resp.Step, resp.Message)
-		fmt.Printf("✅ Server Status: %s\n", resp.ServerStatus)
-		fmt.Printf("✅ Integration milestone reached!\n")
+		log.Printf("Retrieved: %v", getResp)
 	},
 }
 

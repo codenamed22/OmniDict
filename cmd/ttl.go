@@ -1,36 +1,34 @@
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"log"
+
+	"omnidict/client"
+	"omnidict/proto"
 
 	"github.com/spf13/cobra"
-
-	// 🧠 Uncomment when enabling gRPC
-	"context"
-	"omnidict/client"
-	pb "omnidict/proto"
 )
 
 var ttlCmd = &cobra.Command{
-	Use:   "ttl <key>",
-	Short: "Show TTL of a key",
+	Use:   "ttl [key]",
+	Short: "Get time to live for a key",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
-
-		// ✅ MOCK version (for now)
-		// fmt.Printf("[MOCK] TTL for key '%s': 300 seconds\n", key)
-
-		
-		// 🔌 Real gRPC version (uncomment when backend is ready)
-
-		resp, err := client.GrpcClient.Ttl(context.Background(), &pb.TtlRequest{Key: key})
+		req := &proto.TTLRequest{Key: args[0]}  // Changed from pb.TtlRequest to proto.TTLRequest
+		resp, err := client.Client.TTL(context.Background(), req)  // Changed from client.GrpcClient to client.Client
 		if err != nil {
-			fmt.Printf("❌ Failed to fetch TTL for key '%s': %v\n", key, err)
-			return
+			log.Fatalf("TTL failed: %v", err)
 		}
-		fmt.Printf("✅ TTL for key '%s': %d seconds\n", key, resp.Ttl)
 		
+		switch resp.Ttl {
+		case -2:
+			log.Println("Key does not exist")
+		case -1:
+			log.Println("Key has no expiration")
+		default:
+			log.Printf("TTL: %d seconds", resp.Ttl)
+		}
 	},
 }
 

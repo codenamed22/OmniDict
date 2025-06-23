@@ -6,11 +6,10 @@ import (
 	"sort"
 	"strconv"
 	"sync"
-	"time"
 	"encoding/json"
 	"errors"
+	"time"
 
-	"time" // only used in TestHashRing function - remove later
 )
 
 // tests ig the grpc was correctly integrated

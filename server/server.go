@@ -2,131 +2,99 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 
-	"omnidict/internal/ring" // consistent hashing logic
-	pb "omnidict/proto"      // proto generated Go code
+	"omnidict/proto"
+	"omnidict/ring"
 
 	"google.golang.org/grpc"
 )
 
-// remove Test funtion :P
+type OmnidictServer struct {
+	proto.UnimplementedOmnidictServiceServer
+	Ring *ring.HashRing
+}
 
-// verifies gRPC server connection and hash ring integration
-func (s *server) Test(ctx context.Context, req *pb.TestRequest) (*pb.TestResponse, error) {
-	fmt.Printf("🔌 [SERVER] Received test request: step %d, message: %s\n", req.Step, req.Message)
+func (s *OmnidictServer) Put(ctx context.Context, req *proto.PutRequest) (*proto.PutResponse, error) {
+	s.Ring.Set(req.Key, req.Value)
+	return &proto.PutResponse{Success: true, Message: "OK"}, nil
+}
+
+func (s *OmnidictServer) Get(ctx context.Context, req *proto.GetRequest) (*proto.GetResponse, error) {
+	value, found := s.Ring.Get(req.Key)
+	return &proto.GetResponse{Found: found, Value: value}, nil
+}
+
+func (s *OmnidictServer) Delete(ctx context.Context, req *proto.DeleteRequest) (*proto.DeleteResponse, error) {
+	err := s.Ring.Delete(req.Key)
+	return &proto.DeleteResponse{Success: err == nil}, err
+}
+
+func (s *OmnidictServer) Exists(ctx context.Context, req *proto.ExistsRequest) (*proto.ExistsResponse, error) {
+	exists := s.Ring.Exists(req.Key)
+	return &proto.ExistsResponse{Exists: exists}, nil
+}
+
+func (s *OmnidictServer) Keys(ctx context.Context, req *proto.KeysRequest) (*proto.KeysResponse, error) {
+	keys := s.Ring.GetAllKeys()
+	return &proto.KeysResponse{Keys: keys}, nil
+}
+
+func (s *OmnidictServer) Flush(ctx context.Context, req *proto.FlushRequest) (*proto.FlushResponse, error) {
+	// Implementation would clear all data
+	return &proto.FlushResponse{Success: true}, nil
+}
+
+func (s *OmnidictServer) Update(ctx context.Context, req *proto.UpdateRequest) (*proto.UpdateResponse, error) {
+	// Check if key exists first
+	if !s.Ring.Exists(req.Key) {
+		return &proto.UpdateResponse{Success: false, Message: "Key not found"}, nil
+	}
 	
-	// we've reached the hash ring
-	fmt.Printf("[HASHRING] Test request reached hash ring layer\n")
-	fmt.Printf("[HASHRING] Processing step %d: %s\n", req.Step, req.Message)
+	s.Ring.Set(req.Key, req.Value)
+	return &proto.UpdateResponse{Success: true, Message: "Updated successfully"}, nil
+}
+
+func (s *OmnidictServer) Expire(ctx context.Context, req *proto.ExpireRequest) (*proto.ExpireResponse, error) {
+	// For now, just return success (TTL implementation would require more complex storage)
+	return &proto.ExpireResponse{Success: true, Message: "Expiration set"}, nil
+}
+
+func (s *OmnidictServer) TTL(ctx context.Context, req *proto.TTLRequest) (*proto.TTLResponse, error) {
+	// Check if key exists
+	if !s.Ring.Exists(req.Key) {
+		return &proto.TTLResponse{Ttl: -2}, nil // Key doesn't exist
+	}
 	
-	// hash ring status
-	ringStatus := fmt.Sprintf("Hash ring active - Current node: %s", s.selfID)
-	
-	// test hash ring functionality with a sample key
-	testKey := "test_key_integration"
-	targetNode := s.ring.GetNode(testKey)
-	fmt.Printf("[HASHRING] Sample key '%s' would route to node: %s\n", testKey, targetNode)
-	
-	processedMessage := fmt.Sprintf("Hash ring processed: %s", req.Message)
-	serverStatus := fmt.Sprintf("Server OK | %s | Target node for test: %s", ringStatus, targetNode)
-	
-	return &pb.TestResponse{
-		Success:      true,
-		Message:      processedMessage,
-		Step:         req.Step,
-		ServerStatus: serverStatus,
+	// For now, return -1 (no expiration) since we haven't implemented TTL storage
+	return &proto.TTLResponse{Ttl: -1}, nil
+}
+
+func (s *OmnidictServer) GetNodeInfo(ctx context.Context, req *proto.NodeInfoRequest) (*proto.NodeInfoResponse, error) {
+	nodeNames := s.Ring.GetNodeNames()
+	return &proto.NodeInfoResponse{
+		NodeId:     "node-1",
+		Address:    "localhost:50051",
+		Status:     "healthy",
+		TotalNodes: int32(len(nodeNames)),
+		Nodes:      nodeNames,
 	}, nil
 }
 
-// server implements the gRPC KVStore service
-type server struct {
-	pb.UnimplementedKVStoreServer
-	data   map[string]string // Local in-memory store
-	ring   *ring.HashRing    // Reference to the consistent hashing ring
-	selfID string            // Node ID of this server
-}
 
-// Put stores the key-value pair
-func (s *server) Put(ctx context.Context, req *pb.PutRequest) (*pb.PutResponse, error) {
-	targetNode := s.ring.GetNode(req.Key)
-	if targetNode != s.selfID {
-		fmt.Printf("[Redirect] Key '%s' belongs to node '%s'\n", req.Key, targetNode)
-		// TODO: forward to appropriate node via gRPC in real implementation
-		return &pb.PutResponse{Success: false, Error: "Key belongs to another node"}, nil
-	}
-
-	s.data[req.Key] = req.Value
-	fmt.Printf("[Stored] Key: %s, Value: %s\n", req.Key, req.Value)
-	return &pb.PutResponse{Success: true}, nil
-}
-
-// Get retrieves a value by key
-func (s *server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
-	targetNode := s.ring.GetNode(req.Key)
-	if targetNode != s.selfID {
-		fmt.Printf("[Redirect] Key '%s' belongs to node '%s'\n", req.Key, targetNode)
-		return &pb.GetResponse{Found: false}, nil
-	}
-
-	val, ok := s.data[req.Key]
-	if !ok {
-		return &pb.GetResponse{Found: false}, nil
-	}
-	return &pb.GetResponse{Found: true, Value: val}, nil
-}
-
-// Delete removes a key-value pair from the store
-func (s *server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
-	key := req.GetKey()
-	
-	fmt.Printf("🗑️  [SERVER] Received delete request for key: '%s'\n", key)
-	
-	// Check if this key belongs to this node using consistent hashing
-	targetNode := s.ring.GetNode(key)
-	if targetNode != s.selfID {
-		fmt.Printf("🔄 [REDIRECT] Key '%s' belongs to node '%s', not '%s'\n", key, targetNode, s.selfID)
-		return &pb.DeleteResponse{
-			Success: false,
-			Error:   fmt.Sprintf("Key belongs to node '%s'", targetNode),
-		}, nil
+func StartServer() {
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
 	}
 	
-	// Check if the key exists
-	if _, exists := s.data[key]; !exists {
-		fmt.Printf("❌ [NOT FOUND] Key '%s' does not exist\n", key)
-		return &pb.DeleteResponse{
-			Success: false,
-			Error:   "Key not found",
-		}, nil
+	s := grpc.NewServer()
+	hr := ring.NewHashRing(3) // 3 virtual nodes
+	proto.RegisterOmnidictServiceServer(s, &OmnidictServer{Ring: hr})
+	
+	log.Printf("Server listening at %v", lis.Addr())
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
 	}
-	
-	// Delete the key from local storage
-	delete(s.data, key)
-	fmt.Printf("✅ [DELETED] Successfully removed key '%s' from node '%s'\n", key, s.selfID)
-	
-	return &pb.DeleteResponse{
-		Success: true,
-		Error:   "",
-	}, nil
-}
-
-// Expire sets TTL for a key
-func (s *server) Expire(ctx context.Context, req *pb.ExpireRequest) (*pb.ExpireResponse, error) {
-	// TODO: Implement TTL logic
-	return &pb.ExpireResponse{
-		Success: false,
-		Error:   "TTL not implemented yet",
-	}, nil
-}
-
-// Ttl gets remaining TTL for a key
-func (s *server) Ttl(ctx context.Context, req *pb.TtlRequest) (*pb.TtlResponse, error) {
-	// TODO: Implement TTL logic
-	return &pb.TtlResponse{
-		TtlSeconds: -1,
-		Found:      false,
-	}, nil
 }

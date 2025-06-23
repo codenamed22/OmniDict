@@ -1,45 +1,35 @@
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"log"
 	"strconv"
 
-	"github.com/spf13/cobra"
-
-	// 🧠 Uncomment these when switching to gRPC
-	"context"
 	"omnidict/client"
-	pb "omnidict/proto"
+	"omnidict/proto"
+
+	"github.com/spf13/cobra"
 )
 
 var expireCmd = &cobra.Command{
-	Use:   "expire <key> <seconds>",
-	Short: "Set TTL on a key",
+	Use:   "expire [key] [seconds]",
+	Short: "Set expiration time for a key",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
-		ttl, err := strconv.Atoi(args[1])
+		ttl, err := strconv.ParseInt(args[1], 10, 64)
 		if err != nil {
-			fmt.Println("Invalid TTL value")
-			return
+			log.Fatalf("Invalid TTL: %v", err)
 		}
-
-		// ✅ MOCK version (for now)
-		// fmt.Printf("[MOCK] TTL for key '%s' set to %d seconds\n", key, ttl)
-
 		
-		// 🔌 Real gRPC version (uncomment this when gRPC is active)
-
-		_, err = client.GrpcClient.Expire(context.Background(), &pb.ExpireRequest{
-			Key: key,
-			TtlSeconds: int64(ttl),
-		})
+		req := &proto.ExpireRequest{
+			Key: args[0],
+			Ttl: ttl,  // Changed from TtlSeconds to Ttl
+		}
+		resp, err := client.Client.Expire(context.Background(), req)  // Changed from client.GrpcClient to client.Client
 		if err != nil {
-			fmt.Printf("❌ Failed to set TTL for key '%s': %v\n", key, err)
-			return
+			log.Fatalf("Expire failed: %v", err)
 		}
-		fmt.Printf("✅ TTL for key '%s' set to %d seconds\n", key, ttl)
-		
+		log.Printf("Expire: %v", resp)
 	},
 }
 

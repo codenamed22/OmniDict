@@ -4,10 +4,17 @@ package main
 
 import (
 	"omnidict/cmd"
+	"omnidict/client"
+	"omnidict/server"
+	"os"
 )
 
 func main() {
-	client.InitGRPCClient()
-	defer client.Conn.Close()
-	cmd.Execute()
+	if len(os.Args) > 1 && os.Args[1] == "server" {
+		server.StartServer()
+	} else {
+		client.InitGRPCClient()
+		defer client.Conn.Close()
+		cmd.Execute()
+	}
 }

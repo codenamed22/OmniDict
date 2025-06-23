@@ -1,37 +1,31 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/spf13/cobra"
-
-	// 🧠 Uncomment these when gRPC backend is ready
 	"context"
+	"log"
+	"strings"
+
 	"omnidict/client"
-	pb "omnidict/proto"
+	"omnidict/proto"
+
+	"github.com/spf13/cobra"
 )
 
 var keysCmd = &cobra.Command{
-	Use:   "keys",
-	Short: "List all keys",
+	Use:   "keys [pattern]",
+	Short: "List keys matching pattern",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// ✅ MOCK version (for now)
-		// fmt.Println("[MOCK] All keys: user1, session, token")
-
-		
-		// 🔌 Real gRPC version (uncomment when ready)
-
-		resp, err := client.GrpcClient.Keys(context.Background(), &pb.KeysRequest{})
+		pattern := ""
+		if len(args) > 0 {
+			pattern = args[0]
+		}
+		req := &proto.KeysRequest{Pattern: pattern}
+		resp, err := client.Client.Keys(context.Background(), req)
 		if err != nil {
-			fmt.Printf("❌ Failed to list keys: %v\n", err)
-			return
+			log.Fatalf("Keys failed: %v", err)
 		}
-
-		fmt.Print("✅ All keys: ")
-		for _, key := range resp.Keys {
-			fmt.Print(key, " ")
-		}
-		fmt.Println()
-		
+		log.Printf("Keys: %s", strings.Join(resp.Keys, ", "))
 	},
 }
 
