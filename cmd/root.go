@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	// 🧠 Uncomment when enabling gRPC
+	"omnidict/client"
 	
 	"github.com/spf13/cobra"
 )
@@ -11,6 +13,9 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	// ✅ Initialize gRPC client connection before any command runs
+	client.InitGRPCClient()
+
 	cobra.CheckErr(rootCmd.Execute())
 }
 

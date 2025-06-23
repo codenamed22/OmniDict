@@ -3,27 +3,48 @@ syntax = "proto3";
 package kvstore;
 
 // This line tells protoc where to place generated Go files and their import path
-option go_package = "./proto";
+option go_package = "./";
 
+// protoc --go_out=. --go-grpc_out=. kv.proto - for regerenerating Go code
 
-
-// =============================
-//        KV Store Service
-// =============================
+// Service
 
 service KVStore {
   // Basic operations
-  rpc Put (PutRequest) returns (PutResponse);
+  rpc Delete (DeleteRequest) returns (DeleteResponse);
+  rpc Exists (ExistsRequest) returns (ExistsResponse);
+  rpc Expire (ExpireRequest) returns (ExpireResponse);
+  rpc Flush (FlushRequest) returns (FlushResponse);
   rpc Get (GetRequest) returns (GetResponse);
+  rpc Keys (KeysRequest) returns (KeysResponse);
+  rpc Put (PutRequest) returns (PutResponse);
+  rpc Ttl (TtlRequest) returns (TtlResponse);
+  rpc Update (UpdateRequest) returns (UpdateResponse);
   
   // Cluster management operations
   rpc Join (JoinRequest) returns (JoinResponse);
+
+  // Test/Debug operations
+  rpc Test (TestRequest) returns (TestResponse);
+  
+}
+
+/* remove test operations when pushing to production*/
+// Request for testing connectivity and integration
+message TestRequest {
+  string message = 1;    // optional test message
+  int32 step = 2;        // integration step number
+}
+
+// Response for test operation
+message TestResponse {
+  bool success = 1;
+  string message = 2;    // echoed message or status
+  int32 step = 3;        // echoed step number
+  string server_status = 4; // server status info
 }
 
 
-// =============================
-//      Put/Get Operations
-// =============================
 
 // Request for putting a key-value pair
 message PutRequest {
@@ -48,10 +69,83 @@ message GetResponse {
   bool found = 2;
 }
 
+// Request for deleting a key
+message DeleteRequest {
+  string key = 1;
+}
 
-// =============================
-//     Cluster Join Operation
-// =============================
+// Response after deleting a key
+message DeleteResponse {
+  bool success = 1;
+  string error = 2; // optional error message
+}
+
+// Request for checking if a key exists
+message ExistsRequest {
+  string key = 1;
+}
+
+// Response after checking key existence
+message ExistsResponse {
+  bool exists = 1;
+}
+
+// Request for setting expiration on a key
+message ExpireRequest {
+  string key = 1;
+  int64 ttl_seconds = 2; // time to live in seconds
+}
+
+// Response after setting expiration
+message ExpireResponse {
+  bool success = 1;
+  string error = 2; // optional error message
+}
+
+// Request for clearing all keys
+message FlushRequest {
+  // Empty request - flush all keys
+}
+
+// Response after flushing
+message FlushResponse {
+  bool success = 1;
+  int32 keys_deleted = 2; // number of keys that were deleted
+}
+
+// Request for getting all keys (optionally with pattern)
+message KeysRequest {
+  string pattern = 1; // optional pattern to match keys (e.g., "user:*")
+}
+
+// Response with list of keys
+message KeysResponse {
+  repeated string keys = 1;
+}
+
+// Request for getting time-to-live of a key
+message TtlRequest {
+  string key = 1;
+}
+
+// Response with TTL information
+message TtlResponse {
+  int64 ttl_seconds = 1; // -1 if no expiration, -2 if key doesn't exist
+  bool found = 2;
+}
+
+// Request for updating an existing key
+message UpdateRequest {
+  string key = 1;
+  string value = 2;
+}
+
+// Response after updating
+message UpdateResponse {
+  bool success = 1;
+  bool key_existed = 2; // whether the key existed before update
+  string error = 3; // optional error message
+}
 
 // Request sent by a new node joining the cluster
 message JoinRequest {
@@ -63,11 +157,6 @@ message JoinResponse {
   bool success = 1;
   repeated NodeInfo cluster_nodes = 2;
 }
-
-
-// =============================
-//        Node Information
-// =============================
 
 // Represents a single node in the cluster
 message NodeInfo {

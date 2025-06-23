@@ -4,6 +4,11 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	// 🧠 Uncomment when enabling gRPC
+	"context"
+	"omnidict/client"
+	pb "omnidict/proto"
 )
 
 var getCmd = &cobra.Command{
@@ -13,15 +18,19 @@ var getCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
 
-		// MOCK Output – Replace with actual gRPC call later
-		fmt.Printf("[MOCK] Value for key '%s' is: 'example_value'\n", key)
+		// ✅ MOCK version (for now)
+		// fmt.Printf("[MOCK] Value for key '%s' is: 'example_value'\n", key)
 
-		// Example for gRPC (to be added later)
-		// resp, err := grpcClient.Get(ctx, &pb.GetRequest{Key: key})
-		// if err != nil {
-		//     log.Fatalf("Error getting key: %v", err)
-		// }
-		// fmt.Println("Value:", resp.Value)
+		
+		// 🔌 Real gRPC version (uncomment this when gRPC is ready)
+
+		resp, err := client.GrpcClient.Get(context.Background(), &pb.GetRequest{Key: key})
+		if err != nil {
+			fmt.Printf("❌ Failed to get key '%s': %v\n", key, err)
+			return
+		}
+		fmt.Printf("✅ Value for key '%s' is: '%s'\n", key, resp.Value)
+		
 	},
 }
 

@@ -9,7 +9,25 @@ import (
 	"time"
 	"encoding/json"
 	"errors"
+
+	"time" // only used in TestHashRing function - remove later
 )
+
+// tests ig the grpc was correctly integrated
+func TestHashRing(message string, step int32) (bool, string, string) {
+	// Simulate some hash ring processing time
+	time.Sleep(10 * time.Millisecond)
+	
+	// Log that we've reached the hash ring
+	fmt.Printf("🔄 [HASHRING] Test request reached hash ring layer\n")
+	fmt.Printf("📍 [HASHRING] Processing step %d: %s\n", step, message)
+	
+	// Simulate hash ring status
+	status := fmt.Sprintf("Hash ring active with %d nodes", 3) // Mock 3 nodes
+	
+	// Return success status
+	return true, fmt.Sprintf("Hash ring processed: %s", message), status
+}
 
 // consistent hash ring
 type HashRing struct {
