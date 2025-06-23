@@ -5,6 +5,8 @@ package kvstore;
 // This line tells protoc where to place generated Go files and their import path
 option go_package = "./";
 
+// protoc --go_out=. --go-grpc_out=. kv.proto - for regerenerating Go code
+
 // Service
 
 service KVStore {
