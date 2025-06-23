@@ -4,6 +4,10 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	// 🧠 Uncomment when enabling gRPC
+	// "context"
+	// "omnidict/client"
+	// pb "omnidict/kvstore/proto"
 )
 
 var updateCmd = &cobra.Command{
@@ -14,17 +18,23 @@ var updateCmd = &cobra.Command{
 		key := args[0]
 		newVal := args[1]
 
-		// 🔄 MOCK implementation
+		// ✅ MOCK version (for now)
 		// Assume key exists and simulate update
 		fmt.Printf("[MOCK] Updated key '%s' with new value '%s'\n", key, newVal)
 
-		// 🔌 Future:
-		// resp, err := grpcClient.Update(ctx, &pb.UpdateRequest{Key: key, Value: newVal})
-		// if err != nil {
-		//     fmt.Println("Update failed:", err)
-		//     return
-		// }
-		// fmt.Println("Update successful:", resp.Status)
+		/*
+			🔌 Real gRPC version (uncomment when backend is ready)
+
+			_, err := client.GrpcClient.Update(context.Background(), &pb.UpdateRequest{
+				Key:   key,
+				Value: newVal,
+			})
+			if err != nil {
+				fmt.Printf("❌ Failed to update key '%s': %v\n", key, err)
+				return
+			}
+			fmt.Printf("✅ Updated key '%s' with new value '%s'\n", key, newVal)
+		*/
 	},
 }
 
