@@ -19,8 +19,8 @@ func (s *server) Test(ctx context.Context, req *pb.TestRequest) (*pb.TestRespons
 	fmt.Printf("🔌 [SERVER] Received test request: step %d, message: %s\n", req.Step, req.Message)
 	
 	// we've reached the hash ring
-	fmt.Printf("🔄 [HASHRING] Test request reached hash ring layer\n")
-	fmt.Printf("📍 [HASHRING] Processing step %d: %s\n", req.Step, req.Message)
+	fmt.Printf("[HASHRING] Test request reached hash ring layer\n")
+	fmt.Printf("[HASHRING] Processing step %d: %s\n", req.Step, req.Message)
 	
 	// hash ring status
 	ringStatus := fmt.Sprintf("Hash ring active - Current node: %s", s.selfID)
@@ -28,7 +28,7 @@ func (s *server) Test(ctx context.Context, req *pb.TestRequest) (*pb.TestRespons
 	// test hash ring functionality with a sample key
 	testKey := "test_key_integration"
 	targetNode := s.ring.GetNode(testKey)
-	fmt.Printf("🎯 [HASHRING] Sample key '%s' would route to node: %s\n", testKey, targetNode)
+	fmt.Printf("[HASHRING] Sample key '%s' would route to node: %s\n", testKey, targetNode)
 	
 	processedMessage := fmt.Sprintf("Hash ring processed: %s", req.Message)
 	serverStatus := fmt.Sprintf("Server OK | %s | Target node for test: %s", ringStatus, targetNode)
@@ -78,30 +78,55 @@ func (s *server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	return &pb.GetResponse{Found: true, Value: val}, nil
 }
 
-func main() {
-	selfID := "node1" // This would be unique per instance
-	nodeAddr := ":50051"
-
-	hashRing := ring.NewHashRing(3) // Create a new hash ring with 3 virtual nodes per physical node
-	// Add this node to the hash ring
-	hashRing.AddNode(selfID)
-
-	s := &server{
-		data:   make(map[string]string),
-		ring:   hashRing,
-		selfID: selfID,
+// Delete removes a key-value pair from the store
+func (s *server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+	key := req.GetKey()
+	
+	fmt.Printf("🗑️  [SERVER] Received delete request for key: '%s'\n", key)
+	
+	// Check if this key belongs to this node using consistent hashing
+	targetNode := s.ring.GetNode(key)
+	if targetNode != s.selfID {
+		fmt.Printf("🔄 [REDIRECT] Key '%s' belongs to node '%s', not '%s'\n", key, targetNode, s.selfID)
+		return &pb.DeleteResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Key belongs to node '%s'", targetNode),
+		}, nil
 	}
-
-	lis, err := net.Listen("tcp", nodeAddr)
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+	
+	// Check if the key exists
+	if _, exists := s.data[key]; !exists {
+		fmt.Printf("❌ [NOT FOUND] Key '%s' does not exist\n", key)
+		return &pb.DeleteResponse{
+			Success: false,
+			Error:   "Key not found",
+		}, nil
 	}
+	
+	// Delete the key from local storage
+	delete(s.data, key)
+	fmt.Printf("✅ [DELETED] Successfully removed key '%s' from node '%s'\n", key, s.selfID)
+	
+	return &pb.DeleteResponse{
+		Success: true,
+		Error:   "",
+	}, nil
+}
 
-	grpcServer := grpc.NewServer()
-	pb.RegisterKVStoreServer(grpcServer, s)
+// Expire sets TTL for a key
+func (s *server) Expire(ctx context.Context, req *pb.ExpireRequest) (*pb.ExpireResponse, error) {
+	// TODO: Implement TTL logic
+	return &pb.ExpireResponse{
+		Success: false,
+		Error:   "TTL not implemented yet",
+	}, nil
+}
 
-	fmt.Printf("Node %s listening on %s...\n", selfID, nodeAddr)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
+// Ttl gets remaining TTL for a key
+func (s *server) Ttl(ctx context.Context, req *pb.TtlRequest) (*pb.TtlResponse, error) {
+	// TODO: Implement TTL logic
+	return &pb.TtlResponse{
+		TtlSeconds: -1,
+		Found:      false,
+	}, nil
 }

@@ -21,7 +21,7 @@ func Execute() {
 
 func init() {
 	// Add all subcommands here
-	// rootCmd.AddCommand(deleteCmd)
+	rootCmd.AddCommand(deleteCmd)
 	// rootCmd.AddCommand(existsCmd)
 	// rootCmd.AddCommand(expireCmd)
 	// rootCmd.AddCommand(flushCmd)

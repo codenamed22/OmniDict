@@ -44,8 +44,6 @@ message TestResponse {
   string server_status = 4; // server status info
 }
 
-
-
 // Request for putting a key-value pair
 message PutRequest {
   string key = 1;

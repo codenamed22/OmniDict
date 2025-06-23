@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"context"
 	"omnidict/client"
-	pb "omnidict/proto"
+	// "omnidict/proto"
 	"strconv"
+	"context"
 )
 
 var testCmd = &cobra.Command{
@@ -17,12 +17,12 @@ var testCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Default values
 		step := int32(1)
-		message := "Integration test"
+		message := "integration test"
 
 		// Parse step if provided
 		if len(args) >= 1 {
-			if parsedStep, err := strconv.Atoi(args[0]); err == nil {
-				step = int32(parsedStep)
+			if stepStr, err := strconv.Atoi(args[0]); err == nil {
+				step = int32(stepStr)
 			}
 		}
 
@@ -31,21 +31,34 @@ var testCmd = &cobra.Command{
 			message = args[1]
 		}
 
-		// ✅ MOCK version (for now)
-		// fmt.Printf("🧪 [MOCK] Test Step %d: %s - Connection OK\n", step, message)
+		// 🟢 MOCK version (for now)
+		// fmt.Printf("✅ [MOCK] Test Step %d: %s - Connection OK\n", step, message)
 
-		// 🔌 Real gRPC version (uncomment this when gRPC server is ready)
-		
-		resp, err := client.TestConnection(message, step)
+		// 📡 Real gRPC version (uncomment this when gRPC server is ready)
+		grpcClient, err := client.InitGRPCClient()
 		if err != nil {
-			fmt.Printf("❌ Test failed at step %d: %v\n", step, err)
+			fmt.Printf("❌ Failed to connect to gRPC server: %v\n", err)
 			return
 		}
-		
-		fmt.Printf("🧪 Test Step %d: %s\n", resp.Step, resp.Message)
+		defer grpcClient.Close()
+
+		// Create the proper TestRequest
+		req := &proto.TestRequest{
+			Message: message,
+			Step:    step,
+		}
+
+		// Call the Test method with proper context
+		ctx := context.Background()
+		resp, err := grpcClient.Test(ctx, req)
+		if err != nil {
+			fmt.Printf("❌ [CLIENT] gRPC call failed: %v\n", err)
+			return
+		}
+
+		fmt.Printf("✅ Test Step %d: %s\n", resp.Step, resp.Message)
 		fmt.Printf("✅ Server Status: %s\n", resp.ServerStatus)
-		fmt.Printf("🎯 Integration milestone reached!\n")
-		
+		fmt.Printf("✅ Integration milestone reached!\n")
 	},
 }
 

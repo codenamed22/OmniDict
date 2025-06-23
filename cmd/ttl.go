@@ -24,7 +24,7 @@ var ttlCmd = &cobra.Command{
 		
 		// 🔌 Real gRPC version (uncomment when backend is ready)
 
-		resp, err := client.GrpcClient.TTL(context.Background(), &pb.TTLRequest{Key: key})
+		resp, err := client.GrpcClient.Ttl(context.Background(), &pb.TtlRequest{Key: key})
 		if err != nil {
 			fmt.Printf("❌ Failed to fetch TTL for key '%s': %v\n", key, err)
 			return

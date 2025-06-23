@@ -32,7 +32,7 @@ var expireCmd = &cobra.Command{
 
 		_, err = client.GrpcClient.Expire(context.Background(), &pb.ExpireRequest{
 			Key: key,
-			TTL: int64(ttl),
+			TtlSeconds: int64(ttl),
 		})
 		if err != nil {
 			fmt.Printf("❌ Failed to set TTL for key '%s': %v\n", key, err)
