@@ -741,3 +741,9 @@ func (hr *HashRing) SimulateKeyMovement(keys []string) {
 	fmt.Printf("Keys moved: %d/%d (%.1f%%)\n", moved, len(keys), float64(moved)/float64(len(keys))*100)
 	fmt.Printf("===============================\n\n")
 }
+
+func (hr *HashRing) GetNodeNames() []string {
+    hr.mutex.RLock()
+    defer hr.mutex.RUnlock()
+    return hr.nodeNames
+}
