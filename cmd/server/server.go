@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -11,6 +11,35 @@ import (
 
 	"google.golang.org/grpc"
 )
+
+// remove Test funtion :P
+
+// verifies gRPC server connection and hash ring integration
+func (s *server) Test(ctx context.Context, req *pb.TestRequest) (*pb.TestResponse, error) {
+	fmt.Printf("🔌 [SERVER] Received test request: step %d, message: %s\n", req.Step, req.Message)
+	
+	// we've reached the hash ring
+	fmt.Printf("🔄 [HASHRING] Test request reached hash ring layer\n")
+	fmt.Printf("📍 [HASHRING] Processing step %d: %s\n", req.Step, req.Message)
+	
+	// hash ring status
+	ringStatus := fmt.Sprintf("Hash ring active - Current node: %s", s.selfID)
+	
+	// test hash ring functionality with a sample key
+	testKey := "test_key_integration"
+	targetNode := s.ring.GetNode(testKey)
+	fmt.Printf("🎯 [HASHRING] Sample key '%s' would route to node: %s\n", testKey, targetNode)
+	
+	processedMessage := fmt.Sprintf("Hash ring processed: %s", req.Message)
+	serverStatus := fmt.Sprintf("Server OK | %s | Target node for test: %s", ringStatus, targetNode)
+	
+	return &pb.TestResponse{
+		Success:      true,
+		Message:      processedMessage,
+		Step:         req.Step,
+		ServerStatus: serverStatus,
+	}, nil
+}
 
 // server implements the gRPC KVStore service
 type server struct {

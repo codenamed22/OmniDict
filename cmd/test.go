@@ -36,10 +36,7 @@ var testCmd = &cobra.Command{
 
 		// 🔌 Real gRPC version (uncomment this when gRPC server is ready)
 		
-		resp, err := client.GrpcClient.Test(context.Background(), &pb.TestRequest{
-			Message: message,
-			Step:    step,
-		})
+		resp, err := client.TestConnection(message, step)
 		if err != nil {
 			fmt.Printf("❌ Test failed at step %d: %v\n", step, err)
 			return

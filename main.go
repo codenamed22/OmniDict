@@ -3,7 +3,6 @@
 package main
 
 import (
-	"omnidict/client"
 	"omnidict/cmd"
 )
 
