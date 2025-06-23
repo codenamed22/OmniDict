@@ -1,6 +1,7 @@
 // Remove when pushing to main
 /*
 	go run ring.go test_ring.go - test krlo
+	when testing bring the file to the same folder as ring.go and change the first line from import ring -> import main
 */
 package main
 
