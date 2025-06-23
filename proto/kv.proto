@@ -23,7 +23,28 @@ service KVStore {
   
   // Cluster management operations
   rpc Join (JoinRequest) returns (JoinResponse);
+
+  // Test/Debug operations
+  rpc Test (TestRequest) returns (TestResponse);
+  
 }
+
+/* remove test operations when pushing to production*/
+// Request for testing connectivity and integration
+message TestRequest {
+  string message = 1;    // optional test message
+  int32 step = 2;        // integration step number
+}
+
+// Response for test operation
+message TestResponse {
+  bool success = 1;
+  string message = 2;    // echoed message or status
+  int32 step = 3;        // echoed step number
+  string server_status = 4; // server status info
+}
+
+
 
 // Request for putting a key-value pair
 message PutRequest {
