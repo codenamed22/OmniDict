@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	// 🧠 Uncomment when using real gRPC
-	// "context"
-	// "omnidict/client"
-	// pb "omnidict/kvstore/proto"
+	"context"
+	"omnidict/client"
+	pb "omnidict/proto"
 )
 
 var deleteCmd = &cobra.Command{
@@ -17,10 +17,10 @@ var deleteCmd = &cobra.Command{
 		key := args[0]
 
 		// ✅ MOCK version (for now)
-		fmt.Printf("[MOCK] Deleted key '%s'\n", key)
+		// fmt.Printf("[MOCK] Deleted key '%s'\n", key)
 
-		/*
-		🔌 Real gRPC version (uncomment this when gRPC server is ready)
+		
+		// 🔌 Real gRPC version (uncomment this when gRPC server is ready)
 
 		_, err := client.GrpcClient.Delete(context.Background(), &pb.DeleteRequest{Key: key})
 		if err != nil {
@@ -28,7 +28,7 @@ var deleteCmd = &cobra.Command{
 			return
 		}
 		fmt.Printf("✅ Deleted key '%s'\n", key)
-		*/
+		
 	},
 }
 

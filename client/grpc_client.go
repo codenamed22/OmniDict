@@ -7,7 +7,7 @@ import (
 )
 
 var Conn *grpc.ClientConn
-var GrpcClient pb.KVServiceClient
+var GrpcClient pb.KVStoreClient
 
 func InitGRPCClient() {
 	var err error
@@ -16,5 +16,5 @@ func InitGRPCClient() {
 		log.Fatalf("Failed to connect to gRPC server: %v", err)
 	}
 
-	GrpcClient = pb.NewKVServiceClient(Conn)
+	GrpcClient = pb.NewKVStoreClient(Conn)
 }

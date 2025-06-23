@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	// 🧠 Uncomment when enabling gRPC
-	// "context"
-	// "omnidict/client"
-	// pb "omnidict/kvstore/proto"
+	"context"
+	"omnidict/client"
+	pb "omnidict/proto"
 )
 
 var existsCmd = &cobra.Command{
@@ -17,10 +17,10 @@ var existsCmd = &cobra.Command{
 		key := args[0]
 
 		// ✅ MOCK version (for now)
-		fmt.Printf("[MOCK] Key '%s' exists: true\n", key)
+		// fmt.Printf("[MOCK] Key '%s' exists: true\n", key)
 
-		/*
-		🔌 Real gRPC version (uncomment this when gRPC is active)
+		
+		// 🔌 Real gRPC version (uncomment this when gRPC is active)
 
 		resp, err := client.GrpcClient.Exists(context.Background(), &pb.ExistsRequest{Key: key})
 		if err != nil {
@@ -28,7 +28,7 @@ var existsCmd = &cobra.Command{
 			return
 		}
 		fmt.Printf("✅ Key '%s' exists: %v\n", key, resp.Exists)
-		*/
+		
 	},
 }
 

@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 	// 🧠 Uncomment when enabling gRPC
-	// "context"
-	// "omnidict/client"
-	// pb "omnidict/kvstore/proto"
+	"context"
+	"omnidict/client"
+	pb "omnidict/proto"
 )
 
 var updateCmd = &cobra.Command{
@@ -20,10 +20,10 @@ var updateCmd = &cobra.Command{
 
 		// ✅ MOCK version (for now)
 		// Assume key exists and simulate update
-		fmt.Printf("[MOCK] Updated key '%s' with new value '%s'\n", key, newVal)
+		// fmt.Printf("[MOCK] Updated key '%s' with new value '%s'\n", key, newVal)
 
-		/*
-			🔌 Real gRPC version (uncomment when backend is ready)
+		
+		// 	🔌 Real gRPC version (uncomment when backend is ready)
 
 			_, err := client.GrpcClient.Update(context.Background(), &pb.UpdateRequest{
 				Key:   key,
@@ -34,7 +34,7 @@ var updateCmd = &cobra.Command{
 				return
 			}
 			fmt.Printf("✅ Updated key '%s' with new value '%s'\n", key, newVal)
-		*/
+		
 	},
 }
 

@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	// 🧠 Uncomment when enabling gRPC
-	// "context"
-	// "omnidict/client"
-	// pb "omnidict/kvstore/proto"
+	"context"
+	"omnidict/client"
+	pb "omnidict/proto"
 )
 
 var ttlCmd = &cobra.Command{
@@ -19,10 +19,10 @@ var ttlCmd = &cobra.Command{
 		key := args[0]
 
 		// ✅ MOCK version (for now)
-		fmt.Printf("[MOCK] TTL for key '%s': 300 seconds\n", key)
+		// fmt.Printf("[MOCK] TTL for key '%s': 300 seconds\n", key)
 
-		/*
-		🔌 Real gRPC version (uncomment when backend is ready)
+		
+		// 🔌 Real gRPC version (uncomment when backend is ready)
 
 		resp, err := client.GrpcClient.TTL(context.Background(), &pb.TTLRequest{Key: key})
 		if err != nil {
@@ -30,7 +30,7 @@ var ttlCmd = &cobra.Command{
 			return
 		}
 		fmt.Printf("✅ TTL for key '%s': %d seconds\n", key, resp.Ttl)
-		*/
+		
 	},
 }
 

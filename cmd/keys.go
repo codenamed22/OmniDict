@@ -5,9 +5,9 @@ import (
 	"github.com/spf13/cobra"
 
 	// 🧠 Uncomment these when gRPC backend is ready
-	// "context"
-	// "omnidict/client"
-	// pb "omnidict/kvstore/proto"
+	"context"
+	"omnidict/client"
+	pb "omnidict/proto"
 )
 
 var keysCmd = &cobra.Command{
@@ -15,10 +15,10 @@ var keysCmd = &cobra.Command{
 	Short: "List all keys",
 	Run: func(cmd *cobra.Command, args []string) {
 		// ✅ MOCK version (for now)
-		fmt.Println("[MOCK] All keys: user1, session, token")
+		// fmt.Println("[MOCK] All keys: user1, session, token")
 
-		/*
-		🔌 Real gRPC version (uncomment when ready)
+		
+		// 🔌 Real gRPC version (uncomment when ready)
 
 		resp, err := client.GrpcClient.Keys(context.Background(), &pb.KeysRequest{})
 		if err != nil {
@@ -31,7 +31,7 @@ var keysCmd = &cobra.Command{
 			fmt.Print(key, " ")
 		}
 		fmt.Println()
-		*/
+		
 	},
 }
 

@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	// 🧠 Uncomment these when switching to gRPC
-	// "context"
-	// "omnidict/client"
-	// pb "omnidict/kvstore/proto"
+	"context"
+	"omnidict/client"
+	pb "omnidict/proto"
 )
 
 var expireCmd = &cobra.Command{
@@ -25,10 +25,10 @@ var expireCmd = &cobra.Command{
 		}
 
 		// ✅ MOCK version (for now)
-		fmt.Printf("[MOCK] TTL for key '%s' set to %d seconds\n", key, ttl)
+		// fmt.Printf("[MOCK] TTL for key '%s' set to %d seconds\n", key, ttl)
 
-		/*
-		🔌 Real gRPC version (uncomment this when gRPC is active)
+		
+		// 🔌 Real gRPC version (uncomment this when gRPC is active)
 
 		_, err = client.GrpcClient.Expire(context.Background(), &pb.ExpireRequest{
 			Key: key,
@@ -39,7 +39,7 @@ var expireCmd = &cobra.Command{
 			return
 		}
 		fmt.Printf("✅ TTL for key '%s' set to %d seconds\n", key, ttl)
-		*/
+		
 	},
 }
 
