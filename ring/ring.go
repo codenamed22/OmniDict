@@ -9,6 +9,13 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
+	"log"
+	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/code"
+	"google.golang.org/grpc/status"
+	pb "omnidict/proto"
 
 )
 
@@ -18,8 +25,18 @@ type keyMetadata struct {
 	expiration time.Time
 }
 
+// implements the gRPC server for the consistent hash ring
+type RingServer struct {
+    pb.UnimplementedRingServiceServer   // Embedded for forward compatibility
+    hashRing  *consistenthash.Ring      // Your consistent hashing implementation
+    store     *store.Store              // Connection to storage module
+    currentNode string                  // Current node identifier
+	grpcServer *grpc.Server             // gRPC server instance
+}
+
 // consistent hash ring
 type HashRing struct {
+	mu 			 sync.RWMutex 				  // Mutex for thread safety
 	nodes        map[uint32]string            // hash -> node name
 	nodeNames    []string                     // list of actual nodes
 	sortedHashes []uint32                     // sorted hash values for binary search
@@ -803,4 +820,131 @@ func (hr *HashRing) GetNodeNames() []string {
     hr.mutex.RLock()
     defer hr.mutex.RUnlock()
     return hr.nodeNames
+}
+
+//gRPC Serve Initialization
+func NewRingServer(virtualNodes, replicationFactor int, store *store.Store, port string) *RingServer {
+	currentNode := fmt.Sprintf("localhost:%s", port)
+	hashRing := NewHashRingWithReplication(virtualNodes, replicationFactor)
+	hashRing.AddNodeWithAddress(currentNode, currentNode)
+	
+	return &RingServer{
+		hashRing:   hashRing,
+		store:      store,
+		currentNode: currentNode,
+	}
+}
+
+func (s *RingServer) Start() error {
+	lis, err := net.Listen("tcp", s.currentNode)
+	if err != nil {
+		return fmt.Errorf("failed to listen: %v", err)
+	}
+
+	s.grpcServer = grpc.NewServer()
+	pb.RegisterRingServiceServer(s.grpcServer, s)
+	
+	log.Printf("Server started at %s", s.currentNode)
+	if err := s.grpcServer.Serve(lis); err != nil {
+		return fmt.Errorf("failed to serve: %v", err)
+	}
+	return nil
+}
+
+func (s *RingServer) Stop() {
+	if s.grpcServer != nil {
+		s.grpcServer.GracefulStop()
+	}
+}
+
+// gRPC Server Implemnentation
+func (s *RingServer) GetNodeForRequest(ctx context.Context, req *pb.NodeRequest) (*pb.NodeResponse, error) {
+	targetNode := s.hashRing.GetNode(req.Key)
+	return &pb.NodeResponse{Node: targetNode}, nil
+}
+
+func (s *RingServer) AddNodeForRequest(ctx context.Context, req *pb.NodeRequest) (*pb.Empty, error) {
+	s.hashRing.AddNodeWithAddress(req.Node, req.Address)
+	return &pb.Empty{}, nil
+}
+
+func (s *RingServer) RemoveNodeForRequest(ctx context.Context, req *pb.NodeRequest) (*pb.Empty, error) {
+	s.hashRing.RemoveNode(req.Node)
+	return &pb.Empty{}, nil
+}
+
+// gRPC methods for Put, Get, Delete, and HealthCheck - add others
+func (s *RingServer) Put(ctx context.Context, req *pb.PutRequest) (*pb.PutResponse, error) {
+	key := req.GetKey()
+	targetNode := s.hashRing.GetNode(key)
+
+	if targetNode == s.currentNode {
+		if err := s.store.Put(key, req.GetValue(), time.Duration(req.Ttl)*time.Second); err != nil {
+			return nil, status.Errorf(codes.Internal, "storage error: %v", err)
+		}
+		return &pb.PutResponse{Success: true}, nil
+	}
+	return s.forwardPutRequest(targetNode, req)
+}
+
+func (s *RingServer) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
+	key := req.GetKey()
+	targetNode := s.hashRing.GetNode(key)
+
+	if targetNode == s.currentNode {
+		value, err := s.store.Get(key)
+		if err != nil {
+			return nil, status.Errorf(codes.NotFound, "key not found: %v", err)
+		}
+		return &pb.GetResponse{Value: value}, nil
+	}
+	return s.forwardGetRequest(targetNode, req)
+}
+
+func (s *RingServer) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+	key := req.GetKey()
+	targetNode := s.hashRing.GetNode(key)
+
+	if targetNode == s.currentNode {
+		s.store.Delete(key)
+		return &pb.DeleteResponse{Success: true}, nil
+	}
+	return s.forwardDeleteRequest(targetNode, req)
+}
+
+
+func (s *RingServer) HealthCheck(ctx context.Context, req *pb.HealthRequest) (*pb.HealthResponse, error) {
+	status := s.hashRing.IsNodeHealthy(req.Node)
+	return &pb.HealthResponse{Healthy: status}, nil
+}
+
+// gRPC Forwarding Logic - add other cmds as needed
+func (s *RingServer) forwardPutRequest(node string, req *pb.PutRequest) (*pb.PutResponse, error) {
+	conn, err := grpc.Dial(node, grpc.WithInsecure())
+	if err != nil {
+		return nil, status.Errorf(codes.Unavailable, "forwarding failed: %v", err)
+	}
+	defer conn.Close()
+	client := pb.NewRingServiceClient(conn)
+	return client.Put(context.Background(), req)
+}
+
+func (s *RingServer) forwardGetRequest(node string, req *pb.GetRequest) (*pb.GetResponse, error) {
+	conn, err := grpc.Dial(node, grpc.WithInsecure())
+	if err != nil {
+		return nil, status.Errorf(codes.Unavailable, "forwarding failed: %v", err)
+	}
+	defer conn.Close()
+	client := pb.NewRingServiceClient(conn)
+	return client.Get(context.Background(), req)
+}
+
+func (s *RingServer) forwardDeleteRequest(node string, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+	conn, err := grpc.Dial(node, grpc.WithInsecure())
+	if err != nil {
+		return nil, status.Errorf(codes.Unavailable, "forwarding failed: %v", err)
+	}
+	defer conn.Close()
+	client := pb.NewRingServiceClient(conn)
+	return client.Delete(context.Background(), req)
 }

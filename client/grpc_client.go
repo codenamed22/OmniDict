@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"log"
 
 	"google.golang.org/grpc"
@@ -9,16 +10,30 @@ import (
 )
 
 var Conn *grpc.ClientConn
-var Client pb.OmnidictServiceClient
 
-func InitGRPCClient() {
-	serverAddr := "localhost:50051"
-	conn, err := grpc.Dial(serverAddr, 
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock())
+func InitGRPCClient(endpoint string) {
+	var err error
+	Conn, err = grpc.Dial(endpoint, 
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect: %v", err)
 	}
-	Conn = conn
-	Client = pb.NewOmnidictServiceClient(Conn)
+}
+
+func Put(key string, value []byte) (*pb.PutResponse, error) {
+	client := pb.NewRingServiceClient(Conn)
+	return client.Put(context.Background(), &pb.PutRequest{
+		Key:   key,
+		Value: value,
+	})
+}
+
+func Get(key string) (*pb.GetResponse, error) {
+	client := pb.NewRingServiceClient(Conn)
+	return client.Get(context.Background(), &pb.GetRequest{Key: key})
+}
+
+func Delete(key string) (*pb.DeleteResponse, error) {
+	client := pb.NewRingServiceClient(Conn)
+	return client.Delete(context.Background(), &pb.DeleteRequest{Key: key})
 }

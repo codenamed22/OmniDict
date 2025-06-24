@@ -6,13 +6,18 @@ import (
 	"omnidict/cmd"
 	"omnidict/client"
 	"omnidict/server"
+	"omnidict/store"
 	"os"
 )
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "server" {
-		server.StartServer()
+		// Initialize storage and start server
+		storage := store.NewStore()
+		storage.StartTTLCleaner(5 * time.Minute)
+		server.StartServer("50051", 200, storage)
 	} else {
+		// Client mode
 		client.InitGRPCClient()
 		defer client.Conn.Close()
 		cmd.Execute()
