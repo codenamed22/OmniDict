@@ -6,7 +6,7 @@
 // 	protoc        v3.12.4
 // source: proto/kv.proto
 
-package proto
+package kv
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -1013,7 +1013,7 @@ var File_proto_kv_proto protoreflect.FileDescriptor
 
 const file_proto_kv_proto_rawDesc = "" +
 	"\n" +
-	"\x0eproto/kv.proto\x12\bomnidict\"F\n" +
+	"\x0eproto/kv.proto\x12\x02kv\"F\n" +
 	"\n" +
 	"PutRequest\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
@@ -1069,18 +1069,18 @@ const file_proto_kv_proto_rawDesc = "" +
 	"\x06status\x18\x03 \x01(\tR\x06status\x12\x1f\n" +
 	"\vtotal_nodes\x18\x04 \x01(\x05R\n" +
 	"totalNodes\x12\x14\n" +
-	"\x05nodes\x18\x05 \x03(\tR\x05nodes2\xd8\x04\n" +
-	"\x0fOmnidictService\x122\n" +
-	"\x03Put\x12\x14.omnidict.PutRequest\x1a\x15.omnidict.PutResponse\x122\n" +
-	"\x03Get\x12\x14.omnidict.GetRequest\x1a\x15.omnidict.GetResponse\x12;\n" +
-	"\x06Delete\x12\x17.omnidict.DeleteRequest\x1a\x18.omnidict.DeleteResponse\x12;\n" +
-	"\x06Update\x12\x17.omnidict.UpdateRequest\x1a\x18.omnidict.UpdateResponse\x12;\n" +
-	"\x06Exists\x12\x17.omnidict.ExistsRequest\x1a\x18.omnidict.ExistsResponse\x125\n" +
-	"\x04Keys\x12\x15.omnidict.KeysRequest\x1a\x16.omnidict.KeysResponse\x128\n" +
-	"\x05Flush\x12\x16.omnidict.FlushRequest\x1a\x17.omnidict.FlushResponse\x12;\n" +
-	"\x06Expire\x12\x17.omnidict.ExpireRequest\x1a\x18.omnidict.ExpireResponse\x122\n" +
-	"\x03TTL\x12\x14.omnidict.TTLRequest\x1a\x15.omnidict.TTLResponse\x12D\n" +
-	"\vGetNodeInfo\x12\x19.omnidict.NodeInfoRequest\x1a\x1a.omnidict.NodeInfoResponseB\x10Z\x0eomnidict/protob\x06proto3"
+	"\x05nodes\x18\x05 \x03(\tR\x05nodes2\xe0\x03\n" +
+	"\x0fOmnidictService\x12&\n" +
+	"\x03Put\x12\x0e.kv.PutRequest\x1a\x0f.kv.PutResponse\x12&\n" +
+	"\x03Get\x12\x0e.kv.GetRequest\x1a\x0f.kv.GetResponse\x12/\n" +
+	"\x06Delete\x12\x11.kv.DeleteRequest\x1a\x12.kv.DeleteResponse\x12/\n" +
+	"\x06Update\x12\x11.kv.UpdateRequest\x1a\x12.kv.UpdateResponse\x12/\n" +
+	"\x06Exists\x12\x11.kv.ExistsRequest\x1a\x12.kv.ExistsResponse\x12)\n" +
+	"\x04Keys\x12\x0f.kv.KeysRequest\x1a\x10.kv.KeysResponse\x12,\n" +
+	"\x05Flush\x12\x10.kv.FlushRequest\x1a\x11.kv.FlushResponse\x12/\n" +
+	"\x06Expire\x12\x11.kv.ExpireRequest\x1a\x12.kv.ExpireResponse\x12&\n" +
+	"\x03TTL\x12\x0e.kv.TTLRequest\x1a\x0f.kv.TTLResponse\x128\n" +
+	"\vGetNodeInfo\x12\x13.kv.NodeInfoRequest\x1a\x14.kv.NodeInfoResponseB\x13Z\x11omnidict/proto/kvb\x06proto3"
 
 var (
 	file_proto_kv_proto_rawDescOnce sync.Once
@@ -1096,48 +1096,48 @@ func file_proto_kv_proto_rawDescGZIP() []byte {
 
 var file_proto_kv_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_proto_kv_proto_goTypes = []any{
-	(*PutRequest)(nil),       // 0: omnidict.PutRequest
-	(*PutResponse)(nil),      // 1: omnidict.PutResponse
-	(*GetRequest)(nil),       // 2: omnidict.GetRequest
-	(*GetResponse)(nil),      // 3: omnidict.GetResponse
-	(*DeleteRequest)(nil),    // 4: omnidict.DeleteRequest
-	(*DeleteResponse)(nil),   // 5: omnidict.DeleteResponse
-	(*UpdateRequest)(nil),    // 6: omnidict.UpdateRequest
-	(*UpdateResponse)(nil),   // 7: omnidict.UpdateResponse
-	(*ExistsRequest)(nil),    // 8: omnidict.ExistsRequest
-	(*ExistsResponse)(nil),   // 9: omnidict.ExistsResponse
-	(*KeysRequest)(nil),      // 10: omnidict.KeysRequest
-	(*KeysResponse)(nil),     // 11: omnidict.KeysResponse
-	(*FlushRequest)(nil),     // 12: omnidict.FlushRequest
-	(*FlushResponse)(nil),    // 13: omnidict.FlushResponse
-	(*ExpireRequest)(nil),    // 14: omnidict.ExpireRequest
-	(*ExpireResponse)(nil),   // 15: omnidict.ExpireResponse
-	(*TTLRequest)(nil),       // 16: omnidict.TTLRequest
-	(*TTLResponse)(nil),      // 17: omnidict.TTLResponse
-	(*NodeInfoRequest)(nil),  // 18: omnidict.NodeInfoRequest
-	(*NodeInfoResponse)(nil), // 19: omnidict.NodeInfoResponse
+	(*PutRequest)(nil),       // 0: kv.PutRequest
+	(*PutResponse)(nil),      // 1: kv.PutResponse
+	(*GetRequest)(nil),       // 2: kv.GetRequest
+	(*GetResponse)(nil),      // 3: kv.GetResponse
+	(*DeleteRequest)(nil),    // 4: kv.DeleteRequest
+	(*DeleteResponse)(nil),   // 5: kv.DeleteResponse
+	(*UpdateRequest)(nil),    // 6: kv.UpdateRequest
+	(*UpdateResponse)(nil),   // 7: kv.UpdateResponse
+	(*ExistsRequest)(nil),    // 8: kv.ExistsRequest
+	(*ExistsResponse)(nil),   // 9: kv.ExistsResponse
+	(*KeysRequest)(nil),      // 10: kv.KeysRequest
+	(*KeysResponse)(nil),     // 11: kv.KeysResponse
+	(*FlushRequest)(nil),     // 12: kv.FlushRequest
+	(*FlushResponse)(nil),    // 13: kv.FlushResponse
+	(*ExpireRequest)(nil),    // 14: kv.ExpireRequest
+	(*ExpireResponse)(nil),   // 15: kv.ExpireResponse
+	(*TTLRequest)(nil),       // 16: kv.TTLRequest
+	(*TTLResponse)(nil),      // 17: kv.TTLResponse
+	(*NodeInfoRequest)(nil),  // 18: kv.NodeInfoRequest
+	(*NodeInfoResponse)(nil), // 19: kv.NodeInfoResponse
 }
 var file_proto_kv_proto_depIdxs = []int32{
-	0,  // 0: omnidict.OmnidictService.Put:input_type -> omnidict.PutRequest
-	2,  // 1: omnidict.OmnidictService.Get:input_type -> omnidict.GetRequest
-	4,  // 2: omnidict.OmnidictService.Delete:input_type -> omnidict.DeleteRequest
-	6,  // 3: omnidict.OmnidictService.Update:input_type -> omnidict.UpdateRequest
-	8,  // 4: omnidict.OmnidictService.Exists:input_type -> omnidict.ExistsRequest
-	10, // 5: omnidict.OmnidictService.Keys:input_type -> omnidict.KeysRequest
-	12, // 6: omnidict.OmnidictService.Flush:input_type -> omnidict.FlushRequest
-	14, // 7: omnidict.OmnidictService.Expire:input_type -> omnidict.ExpireRequest
-	16, // 8: omnidict.OmnidictService.TTL:input_type -> omnidict.TTLRequest
-	18, // 9: omnidict.OmnidictService.GetNodeInfo:input_type -> omnidict.NodeInfoRequest
-	1,  // 10: omnidict.OmnidictService.Put:output_type -> omnidict.PutResponse
-	3,  // 11: omnidict.OmnidictService.Get:output_type -> omnidict.GetResponse
-	5,  // 12: omnidict.OmnidictService.Delete:output_type -> omnidict.DeleteResponse
-	7,  // 13: omnidict.OmnidictService.Update:output_type -> omnidict.UpdateResponse
-	9,  // 14: omnidict.OmnidictService.Exists:output_type -> omnidict.ExistsResponse
-	11, // 15: omnidict.OmnidictService.Keys:output_type -> omnidict.KeysResponse
-	13, // 16: omnidict.OmnidictService.Flush:output_type -> omnidict.FlushResponse
-	15, // 17: omnidict.OmnidictService.Expire:output_type -> omnidict.ExpireResponse
-	17, // 18: omnidict.OmnidictService.TTL:output_type -> omnidict.TTLResponse
-	19, // 19: omnidict.OmnidictService.GetNodeInfo:output_type -> omnidict.NodeInfoResponse
+	0,  // 0: kv.OmnidictService.Put:input_type -> kv.PutRequest
+	2,  // 1: kv.OmnidictService.Get:input_type -> kv.GetRequest
+	4,  // 2: kv.OmnidictService.Delete:input_type -> kv.DeleteRequest
+	6,  // 3: kv.OmnidictService.Update:input_type -> kv.UpdateRequest
+	8,  // 4: kv.OmnidictService.Exists:input_type -> kv.ExistsRequest
+	10, // 5: kv.OmnidictService.Keys:input_type -> kv.KeysRequest
+	12, // 6: kv.OmnidictService.Flush:input_type -> kv.FlushRequest
+	14, // 7: kv.OmnidictService.Expire:input_type -> kv.ExpireRequest
+	16, // 8: kv.OmnidictService.TTL:input_type -> kv.TTLRequest
+	18, // 9: kv.OmnidictService.GetNodeInfo:input_type -> kv.NodeInfoRequest
+	1,  // 10: kv.OmnidictService.Put:output_type -> kv.PutResponse
+	3,  // 11: kv.OmnidictService.Get:output_type -> kv.GetResponse
+	5,  // 12: kv.OmnidictService.Delete:output_type -> kv.DeleteResponse
+	7,  // 13: kv.OmnidictService.Update:output_type -> kv.UpdateResponse
+	9,  // 14: kv.OmnidictService.Exists:output_type -> kv.ExistsResponse
+	11, // 15: kv.OmnidictService.Keys:output_type -> kv.KeysResponse
+	13, // 16: kv.OmnidictService.Flush:output_type -> kv.FlushResponse
+	15, // 17: kv.OmnidictService.Expire:output_type -> kv.ExpireResponse
+	17, // 18: kv.OmnidictService.TTL:output_type -> kv.TTLResponse
+	19, // 19: kv.OmnidictService.GetNodeInfo:output_type -> kv.NodeInfoResponse
 	10, // [10:20] is the sub-list for method output_type
 	0,  // [0:10] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name

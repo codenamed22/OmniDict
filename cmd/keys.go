@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"omnidict/client"
-	"omnidict/proto"
+	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )

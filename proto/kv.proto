@@ -1,9 +1,9 @@
 // protoc --go_out=. --go-grpc_out=. proto.proto - for regerenerating Go code
 syntax = "proto3";
 
-package omnidict;
+package kv;
 
-option go_package = "omnidict/proto";
+option go_package = "omnidict/proto/kv";
 
 // The Omnidict service definition
 service OmnidictService {

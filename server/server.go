@@ -6,7 +6,8 @@ import (
 	"net"
 	"time"
 
-	"omnidict/proto"
+	pb_kv "omnidict/proto/kv"
+	pb_ring "omnidict/proto/ring"
 	"omnidict/ring"
 
 	"google.golang.org/grpc"

@@ -6,7 +6,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	pb "omnidict/proto"
+	pb_kv "omnidict/proto/kv"
 )
 
 var Conn *grpc.ClientConn
@@ -20,20 +20,20 @@ func InitGRPCClient(endpoint string) {
 	}
 }
 
-func Put(key string, value []byte) (*pb.PutResponse, error) {
-	client := pb.NewRingServiceClient(Conn)
-	return client.Put(context.Background(), &pb.PutRequest{
+func Put(key string, value []byte) (*pb_kv.PutResponse, error) {
+	client := pb_kv.NewRingServiceClient(Conn)
+	return client.Put(context.Background(), &pb_kv.PutRequest{
 		Key:   key,
 		Value: value,
 	})
 }
 
-func Get(key string) (*pb.GetResponse, error) {
-	client := pb.NewRingServiceClient(Conn)
-	return client.Get(context.Background(), &pb.GetRequest{Key: key})
+func Get(key string) (*pb_kv.GetResponse, error) {
+	client := pb_kv.NewRingServiceClient(Conn)
+	return client.Get(context.Background(), &pb_kv.GetRequest{Key: key})
 }
 
-func Delete(key string) (*pb.DeleteResponse, error) {
-	client := pb.NewRingServiceClient(Conn)
-	return client.Delete(context.Background(), &pb.DeleteRequest{Key: key})
+func Delete(key string) (*pb_kv.DeleteResponse, error) {
+	client := pb_kv.NewRingServiceClient(Conn)
+	return client.Delete(context.Background(), &pb_kv.DeleteRequest{Key: key})
 }

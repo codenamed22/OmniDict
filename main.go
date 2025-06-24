@@ -6,8 +6,10 @@ import (
 	"omnidict/cmd"
 	"omnidict/client"
 	"omnidict/server"
+	"omnidict/ring"
 	"omnidict/store"
 	"os"
+	"time"
 )
 
 func main() {

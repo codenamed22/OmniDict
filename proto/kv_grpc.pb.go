@@ -6,7 +6,7 @@
 // - protoc             v3.12.4
 // source: proto/kv.proto
 
-package proto
+package kv
 
 import (
 	context "context"
@@ -21,16 +21,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OmnidictService_Put_FullMethodName         = "/omnidict.OmnidictService/Put"
-	OmnidictService_Get_FullMethodName         = "/omnidict.OmnidictService/Get"
-	OmnidictService_Delete_FullMethodName      = "/omnidict.OmnidictService/Delete"
-	OmnidictService_Update_FullMethodName      = "/omnidict.OmnidictService/Update"
-	OmnidictService_Exists_FullMethodName      = "/omnidict.OmnidictService/Exists"
-	OmnidictService_Keys_FullMethodName        = "/omnidict.OmnidictService/Keys"
-	OmnidictService_Flush_FullMethodName       = "/omnidict.OmnidictService/Flush"
-	OmnidictService_Expire_FullMethodName      = "/omnidict.OmnidictService/Expire"
-	OmnidictService_TTL_FullMethodName         = "/omnidict.OmnidictService/TTL"
-	OmnidictService_GetNodeInfo_FullMethodName = "/omnidict.OmnidictService/GetNodeInfo"
+	OmnidictService_Put_FullMethodName         = "/kv.OmnidictService/Put"
+	OmnidictService_Get_FullMethodName         = "/kv.OmnidictService/Get"
+	OmnidictService_Delete_FullMethodName      = "/kv.OmnidictService/Delete"
+	OmnidictService_Update_FullMethodName      = "/kv.OmnidictService/Update"
+	OmnidictService_Exists_FullMethodName      = "/kv.OmnidictService/Exists"
+	OmnidictService_Keys_FullMethodName        = "/kv.OmnidictService/Keys"
+	OmnidictService_Flush_FullMethodName       = "/kv.OmnidictService/Flush"
+	OmnidictService_Expire_FullMethodName      = "/kv.OmnidictService/Expire"
+	OmnidictService_TTL_FullMethodName         = "/kv.OmnidictService/TTL"
+	OmnidictService_GetNodeInfo_FullMethodName = "/kv.OmnidictService/GetNodeInfo"
 )
 
 // OmnidictServiceClient is the client API for OmnidictService service.
@@ -428,7 +428,7 @@ func _OmnidictService_GetNodeInfo_Handler(srv interface{}, ctx context.Context, 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var OmnidictService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "omnidict.OmnidictService",
+	ServiceName: "kv.OmnidictService",
 	HandlerType: (*OmnidictServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

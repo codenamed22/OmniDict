@@ -1,0 +1,53 @@
+// protoc --go_out=. --go_opt=paths=source_relative \ --go-grpc_out=. --go-grpc_opt=paths=source_relative \ proto/ring.proto
+
+syntax = "proto3";
+
+package ring;
+
+option go_package = "omnidict/proto/ring";
+
+service RingService {
+  rpc GetNodeForRequest(NodeRequest) returns (NodeResponse);
+  rpc AddNodeForRequest(NodeRequest) returns (Empty);
+  rpc RemoveNodeForRequest(NodeRequest) returns (Empty);
+  rpc Put(PutRequest) returns (PutResponse);
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+}
+
+message NodeRequest {
+  string key = 1;
+  string node = 2;
+}
+
+message NodeResponse {
+  string node = 1;
+}
+
+message PutRequest {
+  string key = 1;
+  bytes value = 2;
+  int64 ttl = 3;
+}
+
+message PutResponse {
+  bool success = 1;
+}
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  bytes value = 1;
+}
+
+message DeleteRequest {
+  string key = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}
+
+message Empty {}
