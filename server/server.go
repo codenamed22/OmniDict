@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"time"
 
 	"omnidict/proto"
 	"omnidict/ring"
@@ -16,14 +17,27 @@ type OmnidictServer struct {
 	Ring *ring.HashRing
 }
 
+func NewOmnidictServer() *OmnidictServer {
+	return &OmnidictServer{
+		Ring: ring.NewHashRingWithReplication(3, 3),
+	}
+}
+
 func (s *OmnidictServer) Put(ctx context.Context, req *proto.PutRequest) (*proto.PutResponse, error) {
-	s.Ring.Set(req.Key, req.Value)
+	// Using 0 TTL for put (no expiration)
+	err := s.Ring.SetWithReplication(req.Key, req.Value, 0)
+	if err != nil {
+		return &proto.PutResponse{Success: false, Message: err.Error()}, nil
+	}
 	return &proto.PutResponse{Success: true, Message: "OK"}, nil
 }
 
 func (s *OmnidictServer) Get(ctx context.Context, req *proto.GetRequest) (*proto.GetResponse, error) {
-	value, found := s.Ring.Get(req.Key)
-	return &proto.GetResponse{Found: found, Value: value}, nil
+	value, err := s.Ring.GetWithReplication(req.Key)
+	if err != nil {
+		return &proto.GetResponse{Found: false, Value: ""}, nil
+	}
+	return &proto.GetResponse{Found: true, Value: value}, nil
 }
 
 func (s *OmnidictServer) Delete(ctx context.Context, req *proto.DeleteRequest) (*proto.DeleteResponse, error) {
@@ -37,38 +51,64 @@ func (s *OmnidictServer) Exists(ctx context.Context, req *proto.ExistsRequest) (
 }
 
 func (s *OmnidictServer) Keys(ctx context.Context, req *proto.KeysRequest) (*proto.KeysResponse, error) {
-	keys := s.Ring.GetAllKeys()
+	var keys []string
+	if req.Pattern == "" {
+		keys = s.Ring.GetAllKeys()
+	} else {
+		keys = s.Ring.GetKeysWithPrefix(req.Pattern)
+	}
 	return &proto.KeysResponse{Keys: keys}, nil
 }
 
 func (s *OmnidictServer) Flush(ctx context.Context, req *proto.FlushRequest) (*proto.FlushResponse, error) {
-	// Implementation would clear all data
+	// Implement using your hash ring's capabilities
+	for _, node := range s.Ring.GetNodeNames() {
+		store := s.Ring.GetNodeStore(node)
+		for key := range store {
+			s.Ring.Delete(key)
+		}
+	}
 	return &proto.FlushResponse{Success: true}, nil
 }
 
-func (s *OmnidictServer) Update(ctx context.Context, req *proto.UpdateRequest) (*proto.UpdateResponse, error) {
-	// Check if key exists first
-	if !s.Ring.Exists(req.Key) {
-		return &proto.UpdateResponse{Success: false, Message: "Key not found"}, nil
+func (s *OmnidictServer) Expire(ctx context.Context, req *proto.ExpireRequest) (*proto.ExpireResponse, error) {
+	ttl := req.Ttl
+	
+	// Get current value to preserve it
+	value, err := s.Ring.GetWithReplication(req.Key)
+	if err != nil {
+		return &proto.ExpireResponse{Success: false, Message: "Key not found"}, nil
 	}
 	
-	s.Ring.Set(req.Key, req.Value)
-	return &proto.UpdateResponse{Success: true, Message: "Updated successfully"}, nil
-}
-
-func (s *OmnidictServer) Expire(ctx context.Context, req *proto.ExpireRequest) (*proto.ExpireResponse, error) {
-	// For now, just return success (TTL implementation would require more complex storage)
+	// Update with TTL
+	err = s.Ring.SetWithReplication(req.Key, value, time.Duration(ttl)*time.Second)
+	if err != nil {
+		return &proto.ExpireResponse{Success: false, Message: err.Error()}, nil
+	}
+	
 	return &proto.ExpireResponse{Success: true, Message: "Expiration set"}, nil
 }
 
 func (s *OmnidictServer) TTL(ctx context.Context, req *proto.TTLRequest) (*proto.TTLResponse, error) {
-	// Check if key exists
-	if !s.Ring.Exists(req.Key) {
+	ttl, exists := s.Ring.GetTTL(req.Key)
+	if !exists {
 		return &proto.TTLResponse{Ttl: -2}, nil // Key doesn't exist
 	}
+	return &proto.TTLResponse{Ttl: int64(ttl.Seconds())}, nil
+}
+
+func (s *OmnidictServer) Update(ctx context.Context, req *proto.UpdateRequest) (*proto.UpdateResponse, error) {
+	if !s.Ring.Exists(req.Key) {
+		return &proto.UpdateResponse{Success: false, Message: "Key not found"}, nil
+	}
 	
-	// For now, return -1 (no expiration) since we haven't implemented TTL storage
-	return &proto.TTLResponse{Ttl: -1}, nil
+	// Preserve existing TTL
+	ttl, _ := s.Ring.GetTTL(req.Key)
+	err := s.Ring.SetWithReplication(req.Key, req.Value, ttl)
+	if err != nil {
+		return &proto.UpdateResponse{Success: false, Message: err.Error()}, nil
+	}
+	return &proto.UpdateResponse{Success: true, Message: "Updated successfully"}, nil
 }
 
 func (s *OmnidictServer) GetNodeInfo(ctx context.Context, req *proto.NodeInfoRequest) (*proto.NodeInfoResponse, error) {
@@ -82,17 +122,16 @@ func (s *OmnidictServer) GetNodeInfo(ctx context.Context, req *proto.NodeInfoReq
 	}, nil
 }
 
-
 func StartServer() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	
+
 	s := grpc.NewServer()
-	hr := ring.NewHashRing(3) // 3 virtual nodes
-	proto.RegisterOmnidictServiceServer(s, &OmnidictServer{Ring: hr})
-	
+	server := NewOmnidictServer()
+	proto.RegisterOmnidictServiceServer(s, server)
+
 	log.Printf("Server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)

@@ -12,20 +12,10 @@ import (
 
 )
 
-// tests ig the grpc was correctly integrated
-func TestHashRing(message string, step int32) (bool, string, string) {
-	// Simulate some hash ring processing time
-	time.Sleep(10 * time.Millisecond)
-	
-	// Log that we've reached the hash ring
-	fmt.Printf("🔄 [HASHRING] Test request reached hash ring layer\n")
-	fmt.Printf("📍 [HASHRING] Processing step %d: %s\n", step, message)
-	
-	// Simulate hash ring status
-	status := fmt.Sprintf("Hash ring active with %d nodes", 3) // Mock 3 nodes
-	
-	// Return success status
-	return true, fmt.Sprintf("Hash ring processed: %s", message), status
+// TTL support
+type keyMetadata struct {
+	value 	string
+	expiration time.Time
 }
 
 // consistent hash ring
@@ -35,6 +25,9 @@ type HashRing struct {
 	sortedHashes []uint32                     // sorted hash values for binary search
 	virtualNodes int                          // number of virtual nodes per physical node
 	nodeStores   map[string]map[string]string // node name -> its own key-value store
+
+	// TTL support
+	keyMetadata map[string]keyMetadata        // key -> {value, expiration}
 
 	// fields for cluster integration
 	nodeAddresses map[string]string // node name -> gRPC address
@@ -88,6 +81,7 @@ func NewHashRingWithReplication(virtualNodes, replicationFactor int) *HashRing {
 		replicationFactor: replicationFactor,
 		consistencyLevel:  QUORUM,
 		lastHealthCheck:   time.Now(),
+		keyMetadata:       make(map[string]keyMetadata),
 	}
 }
 
@@ -277,7 +271,7 @@ func (hr *HashRing) Set(key, value string) {
 }
 
 // NEW: Set with replication support
-func (hr *HashRing) SetWithReplication(key, value string) error {
+func (hr *HashRing) SetWithReplication(key, value string, ttl time.Duration) error {
 	nodes := hr.GetNodesForKey(key, hr.replicationFactor)
 	if len(nodes) == 0 {
 		return errors.New("no healthy nodes available")
@@ -286,6 +280,12 @@ func (hr *HashRing) SetWithReplication(key, value string) error {
 	hr.mutex.Lock()
 	defer hr.mutex.Unlock()
 
+	metadata := keyMetadata{
+		value:      value,
+		expiration: time.Now().Add(ttl),
+	}
+	hr.keyMetadata[key] = metadata
+	
 	successCount := 0
 	for _, nodeName := range nodes {
 		if nodeStore, exists := hr.nodeStores[nodeName]; exists && hr.nodeHealth[nodeName] {
@@ -326,6 +326,21 @@ func (hr *HashRing) Get(key string) (string, bool) {
 
 // NEW: Get with replication support (read repair)
 func (hr *HashRing) GetWithReplication(key string) (string, error) {
+
+	// expiration checking
+	hr.mutex.RLock()
+	metadata, exists := hr.keyMetadata[key]
+	hr.mutex.RUnlock()
+
+	if !exists {
+		return "", errors.New("key not found")
+	}
+
+	if time.Now().After(metadata.expiration) {
+		hr.Delete(key) // delete expired key
+		return "", errors.New("key expired")
+	}
+
 	nodes := hr.GetNodesForKey(key, hr.replicationFactor)
 	if len(nodes) == 0 {
 		return "", errors.New("no healthy nodes available")
@@ -356,6 +371,31 @@ func (hr *HashRing) GetWithReplication(key string) (string, error) {
 	}
 
 	return mostCommonValue, nil
+}
+
+// expiration check helper method
+func (hr *HashRing) isKeyExpired(key string) bool {
+	hr.mutex.RLock()
+	defer hr.mutex.RUnlock()
+	metadata, exists := hr.keyMetadata[key]
+	return exists && time.Now().After(metadata.expiration)
+}
+
+// TTL
+func (hr *HashRing) GetTTL(key string) (time.Duration, bool) {
+	hr.mutex.RLock()
+	defer hr.mutex.RUnlock()
+
+	metadata, exists := hr.keyMetadata[key]
+	if !exists {
+		return 0, false
+	}
+
+	if time.Now().After(metadata.expiration) {
+		return 0, false // key expired
+	}
+
+	return time.Until(metadata.expiration), true
 }
 
 // NEW: Delete a key from all replicas
