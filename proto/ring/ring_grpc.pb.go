@@ -4,7 +4,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.12.4
-// source: proto/ring.proto
+// source: ring.proto
 
 package ring
 
@@ -309,5 +309,5 @@ var RingService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/ring.proto",
+	Metadata: "ring.proto",
 }

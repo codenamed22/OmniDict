@@ -4,7 +4,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v3.12.4
-// source: proto/ring.proto
+// source: ring.proto
 
 package ring
 
@@ -33,7 +33,7 @@ type NodeRequest struct {
 
 func (x *NodeRequest) Reset() {
 	*x = NodeRequest{}
-	mi := &file_proto_ring_proto_msgTypes[0]
+	mi := &file_ring_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -45,7 +45,7 @@ func (x *NodeRequest) String() string {
 func (*NodeRequest) ProtoMessage() {}
 
 func (x *NodeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[0]
+	mi := &file_ring_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -58,7 +58,7 @@ func (x *NodeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NodeRequest.ProtoReflect.Descriptor instead.
 func (*NodeRequest) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{0}
+	return file_ring_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *NodeRequest) GetKey() string {
@@ -84,7 +84,7 @@ type NodeResponse struct {
 
 func (x *NodeResponse) Reset() {
 	*x = NodeResponse{}
-	mi := &file_proto_ring_proto_msgTypes[1]
+	mi := &file_ring_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -96,7 +96,7 @@ func (x *NodeResponse) String() string {
 func (*NodeResponse) ProtoMessage() {}
 
 func (x *NodeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[1]
+	mi := &file_ring_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -109,7 +109,7 @@ func (x *NodeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NodeResponse.ProtoReflect.Descriptor instead.
 func (*NodeResponse) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{1}
+	return file_ring_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *NodeResponse) GetNode() string {
@@ -130,7 +130,7 @@ type PutRequest struct {
 
 func (x *PutRequest) Reset() {
 	*x = PutRequest{}
-	mi := &file_proto_ring_proto_msgTypes[2]
+	mi := &file_ring_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -142,7 +142,7 @@ func (x *PutRequest) String() string {
 func (*PutRequest) ProtoMessage() {}
 
 func (x *PutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[2]
+	mi := &file_ring_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -155,7 +155,7 @@ func (x *PutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutRequest.ProtoReflect.Descriptor instead.
 func (*PutRequest) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{2}
+	return file_ring_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PutRequest) GetKey() string {
@@ -188,7 +188,7 @@ type PutResponse struct {
 
 func (x *PutResponse) Reset() {
 	*x = PutResponse{}
-	mi := &file_proto_ring_proto_msgTypes[3]
+	mi := &file_ring_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -200,7 +200,7 @@ func (x *PutResponse) String() string {
 func (*PutResponse) ProtoMessage() {}
 
 func (x *PutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[3]
+	mi := &file_ring_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -213,7 +213,7 @@ func (x *PutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutResponse.ProtoReflect.Descriptor instead.
 func (*PutResponse) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{3}
+	return file_ring_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PutResponse) GetSuccess() bool {
@@ -232,7 +232,7 @@ type GetRequest struct {
 
 func (x *GetRequest) Reset() {
 	*x = GetRequest{}
-	mi := &file_proto_ring_proto_msgTypes[4]
+	mi := &file_ring_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -244,7 +244,7 @@ func (x *GetRequest) String() string {
 func (*GetRequest) ProtoMessage() {}
 
 func (x *GetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[4]
+	mi := &file_ring_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -257,7 +257,7 @@ func (x *GetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
 func (*GetRequest) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{4}
+	return file_ring_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetRequest) GetKey() string {
@@ -276,7 +276,7 @@ type GetResponse struct {
 
 func (x *GetResponse) Reset() {
 	*x = GetResponse{}
-	mi := &file_proto_ring_proto_msgTypes[5]
+	mi := &file_ring_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -288,7 +288,7 @@ func (x *GetResponse) String() string {
 func (*GetResponse) ProtoMessage() {}
 
 func (x *GetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[5]
+	mi := &file_ring_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -301,7 +301,7 @@ func (x *GetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
 func (*GetResponse) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{5}
+	return file_ring_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetResponse) GetValue() []byte {
@@ -320,7 +320,7 @@ type DeleteRequest struct {
 
 func (x *DeleteRequest) Reset() {
 	*x = DeleteRequest{}
-	mi := &file_proto_ring_proto_msgTypes[6]
+	mi := &file_ring_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -332,7 +332,7 @@ func (x *DeleteRequest) String() string {
 func (*DeleteRequest) ProtoMessage() {}
 
 func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[6]
+	mi := &file_ring_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -345,7 +345,7 @@ func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRequest.ProtoReflect.Descriptor instead.
 func (*DeleteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{6}
+	return file_ring_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *DeleteRequest) GetKey() string {
@@ -364,7 +364,7 @@ type DeleteResponse struct {
 
 func (x *DeleteResponse) Reset() {
 	*x = DeleteResponse{}
-	mi := &file_proto_ring_proto_msgTypes[7]
+	mi := &file_ring_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -376,7 +376,7 @@ func (x *DeleteResponse) String() string {
 func (*DeleteResponse) ProtoMessage() {}
 
 func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[7]
+	mi := &file_ring_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -389,7 +389,7 @@ func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteResponse.ProtoReflect.Descriptor instead.
 func (*DeleteResponse) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{7}
+	return file_ring_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteResponse) GetSuccess() bool {
@@ -407,7 +407,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_proto_ring_proto_msgTypes[8]
+	mi := &file_ring_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -419,7 +419,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ring_proto_msgTypes[8]
+	mi := &file_ring_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -432,14 +432,15 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_proto_ring_proto_rawDescGZIP(), []int{8}
+	return file_ring_proto_rawDescGZIP(), []int{8}
 }
 
-var File_proto_ring_proto protoreflect.FileDescriptor
+var File_ring_proto protoreflect.FileDescriptor
 
-const file_proto_ring_proto_rawDesc = "" +
+const file_ring_proto_rawDesc = "" +
 	"\n" +
-	"\x10proto/ring.proto\x12\x04ring\"3\n" +
+	"\n" +
+	"ring.proto\x12\x04ring\"3\n" +
 	"\vNodeRequest\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x12\n" +
 	"\x04node\x18\x02 \x01(\tR\x04node\"\"\n" +
@@ -468,22 +469,22 @@ const file_proto_ring_proto_rawDesc = "" +
 	"\x14RemoveNodeForRequest\x12\x11.ring.NodeRequest\x1a\v.ring.Empty\x12*\n" +
 	"\x03Put\x12\x10.ring.PutRequest\x1a\x11.ring.PutResponse\x12*\n" +
 	"\x03Get\x12\x10.ring.GetRequest\x1a\x11.ring.GetResponse\x123\n" +
-	"\x06Delete\x12\x13.ring.DeleteRequest\x1a\x14.ring.DeleteResponseB\x15Z\x13omnidict/proto/ringb\x06proto3"
+	"\x06Delete\x12\x13.ring.DeleteRequest\x1a\x14.ring.DeleteResponseB\bZ\x06./ringb\x06proto3"
 
 var (
-	file_proto_ring_proto_rawDescOnce sync.Once
-	file_proto_ring_proto_rawDescData []byte
+	file_ring_proto_rawDescOnce sync.Once
+	file_ring_proto_rawDescData []byte
 )
 
-func file_proto_ring_proto_rawDescGZIP() []byte {
-	file_proto_ring_proto_rawDescOnce.Do(func() {
-		file_proto_ring_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_ring_proto_rawDesc), len(file_proto_ring_proto_rawDesc)))
+func file_ring_proto_rawDescGZIP() []byte {
+	file_ring_proto_rawDescOnce.Do(func() {
+		file_ring_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_ring_proto_rawDesc), len(file_ring_proto_rawDesc)))
 	})
-	return file_proto_ring_proto_rawDescData
+	return file_ring_proto_rawDescData
 }
 
-var file_proto_ring_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
-var file_proto_ring_proto_goTypes = []any{
+var file_ring_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_ring_proto_goTypes = []any{
 	(*NodeRequest)(nil),    // 0: ring.NodeRequest
 	(*NodeResponse)(nil),   // 1: ring.NodeResponse
 	(*PutRequest)(nil),     // 2: ring.PutRequest
@@ -494,7 +495,7 @@ var file_proto_ring_proto_goTypes = []any{
 	(*DeleteResponse)(nil), // 7: ring.DeleteResponse
 	(*Empty)(nil),          // 8: ring.Empty
 }
-var file_proto_ring_proto_depIdxs = []int32{
+var file_ring_proto_depIdxs = []int32{
 	0, // 0: ring.RingService.GetNodeForRequest:input_type -> ring.NodeRequest
 	0, // 1: ring.RingService.AddNodeForRequest:input_type -> ring.NodeRequest
 	0, // 2: ring.RingService.RemoveNodeForRequest:input_type -> ring.NodeRequest
@@ -514,26 +515,26 @@ var file_proto_ring_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_proto_ring_proto_init() }
-func file_proto_ring_proto_init() {
-	if File_proto_ring_proto != nil {
+func init() { file_ring_proto_init() }
+func file_ring_proto_init() {
+	if File_ring_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_ring_proto_rawDesc), len(file_proto_ring_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ring_proto_rawDesc), len(file_ring_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_ring_proto_goTypes,
-		DependencyIndexes: file_proto_ring_proto_depIdxs,
-		MessageInfos:      file_proto_ring_proto_msgTypes,
+		GoTypes:           file_ring_proto_goTypes,
+		DependencyIndexes: file_ring_proto_depIdxs,
+		MessageInfos:      file_ring_proto_msgTypes,
 	}.Build()
-	File_proto_ring_proto = out.File
-	file_proto_ring_proto_goTypes = nil
-	file_proto_ring_proto_depIdxs = nil
+	File_ring_proto = out.File
+	file_ring_proto_goTypes = nil
+	file_ring_proto_depIdxs = nil
 }

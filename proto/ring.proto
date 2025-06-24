@@ -4,7 +4,7 @@ syntax = "proto3";
 
 package ring;
 
-option go_package = "omnidict/proto/ring";
+option go_package = "./ring";
 
 service RingService {
   rpc GetNodeForRequest(NodeRequest) returns (NodeResponse);
