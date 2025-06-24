@@ -13,9 +13,9 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/code"
 	"google.golang.org/grpc/status"
 	pb "omnidict/proto"
+	"omnidict/store"
 
 )
 
@@ -49,7 +49,6 @@ type HashRing struct {
 	// fields for cluster integration
 	nodeAddresses map[string]string // node name -> gRPC address
 	shardMapping  map[string]string // node name -> shard ID
-	mutex         sync.RWMutex      // Thread safety for concurrent access
 	
 	// New fields for enhanced functionality
 	nodeHealth    map[string]bool      // node name -> health status

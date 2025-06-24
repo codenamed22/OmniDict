@@ -3,7 +3,6 @@ package store
 import (
 	"sync"
 	"time"
-	"log"
 	"errors"
 )
 
