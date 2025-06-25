@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"omnidict/client"
-	"/kv"
+	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )

@@ -9,12 +9,13 @@ import (
 	pb_kv "omnidict/proto/kv"
 	pb_ring "omnidict/proto/ring"
 	"omnidict/ring"
+	"omnidict/store"
 
 	"google.golang.org/grpc"
 )
 
 type OmnidictServer struct {
-	proto.UnimplementedOmnidictServiceServer
+	pb_kv.UnimplementedOmnidictServiceServer
 	Ring *ring.HashRing
 }
 
@@ -24,44 +25,44 @@ func NewOmnidictServer() *OmnidictServer {
 	}
 }
 
-func (s *OmnidictServer) Put(ctx context.Context, req *proto.PutRequest) (*proto.PutResponse, error) {
-	// Using 0 TTL for put (no expiration)
+func (s *OmnidictServer) Put(ctx context.Context, req *pb_kv.PutRequest) (*pb_kv.PutResponse, error) {
+	// Using 0 TTL for put - no expiration
 	err := s.Ring.SetWithReplication(req.Key, req.Value, 0)
 	if err != nil {
-		return &proto.PutResponse{Success: false, Message: err.Error()}, nil
+		return &pb_kv.PutResponse{Success: false, Message: err.Error()}, nil
 	}
-	return &proto.PutResponse{Success: true, Message: "OK"}, nil
+	return &pb_kv.PutResponse{Success: true, Message: "OK"}, nil
 }
 
-func (s *OmnidictServer) Get(ctx context.Context, req *proto.GetRequest) (*proto.GetResponse, error) {
+func (s *OmnidictServer) Get(ctx context.Context, req *pb_kv.GetRequest) (*pb_kv.GetResponse, error) {
 	value, err := s.Ring.GetWithReplication(req.Key)
 	if err != nil {
-		return &proto.GetResponse{Found: false, Value: ""}, nil
+		return &pb_kv.GetResponse{Found: false, Value: ""}, nil
 	}
-	return &proto.GetResponse{Found: true, Value: value}, nil
+	return &pb_kv.GetResponse{Found: true, Value: value}, nil
 }
 
-func (s *OmnidictServer) Delete(ctx context.Context, req *proto.DeleteRequest) (*proto.DeleteResponse, error) {
+func (s *OmnidictServer) Delete(ctx context.Context, req *pb_kv.DeleteRequest) (*pb_kv.DeleteResponse, error) {
 	err := s.Ring.Delete(req.Key)
-	return &proto.DeleteResponse{Success: err == nil}, err
+	return &pb_kv.DeleteResponse{Success: err == nil}, err
 }
 
-func (s *OmnidictServer) Exists(ctx context.Context, req *proto.ExistsRequest) (*proto.ExistsResponse, error) {
+func (s *OmnidictServer) Exists(ctx context.Context, req *pb_kv.ExistsRequest) (*pb_kv.ExistsResponse, error) {
 	exists := s.Ring.Exists(req.Key)
-	return &proto.ExistsResponse{Exists: exists}, nil
+	return &pb_kv.ExistsResponse{Exists: exists}, nil
 }
 
-func (s *OmnidictServer) Keys(ctx context.Context, req *proto.KeysRequest) (*proto.KeysResponse, error) {
+func (s *OmnidictServer) Keys(ctx context.Context, req *pb_kv.KeysRequest) (*pb_kv.KeysResponse, error) {
 	var keys []string
 	if req.Pattern == "" {
 		keys = s.Ring.GetAllKeys()
 	} else {
 		keys = s.Ring.GetKeysWithPrefix(req.Pattern)
 	}
-	return &proto.KeysResponse{Keys: keys}, nil
+	return &pb_kv.KeysResponse{Keys: keys}, nil
 }
 
-func (s *OmnidictServer) Flush(ctx context.Context, req *proto.FlushRequest) (*proto.FlushResponse, error) {
+func (s *OmnidictServer) Flush(ctx context.Context, req *pb_kv.FlushRequest) (*pb_kv.FlushResponse, error) {
 	// Implement using your hash ring's capabilities
 	for _, node := range s.Ring.GetNodeNames() {
 		store := s.Ring.GetNodeStore(node)
@@ -69,52 +70,52 @@ func (s *OmnidictServer) Flush(ctx context.Context, req *proto.FlushRequest) (*p
 			s.Ring.Delete(key)
 		}
 	}
-	return &proto.FlushResponse{Success: true}, nil
+	return &pb_kv.FlushResponse{Success: true}, nil
 }
 
-func (s *OmnidictServer) Expire(ctx context.Context, req *proto.ExpireRequest) (*proto.ExpireResponse, error) {
+func (s *OmnidictServer) Expire(ctx context.Context, req *pb_kv.ExpireRequest) (*pb_kv.ExpireResponse, error) {
 	ttl := req.Ttl
 	
 	// Get current value to preserve it
 	value, err := s.Ring.GetWithReplication(req.Key)
 	if err != nil {
-		return &proto.ExpireResponse{Success: false, Message: "Key not found"}, nil
+		return &pb_kv.ExpireResponse{Success: false, Message: "Key not found"}, nil
 	}
 	
 	// Update with TTL
 	err = s.Ring.SetWithReplication(req.Key, value, time.Duration(ttl)*time.Second)
 	if err != nil {
-		return &proto.ExpireResponse{Success: false, Message: err.Error()}, nil
+		return &pb_kv.ExpireResponse{Success: false, Message: err.Error()}, nil
 	}
 	
-	return &proto.ExpireResponse{Success: true, Message: "Expiration set"}, nil
+	return &pb_kv.ExpireResponse{Success: true, Message: "Expiration set"}, nil
 }
 
-func (s *OmnidictServer) TTL(ctx context.Context, req *proto.TTLRequest) (*proto.TTLResponse, error) {
+func (s *OmnidictServer) TTL(ctx context.Context, req *pb_kv.TTLRequest) (*pb_kv.TTLResponse, error) {
 	ttl, exists := s.Ring.GetTTL(req.Key)
 	if !exists {
-		return &proto.TTLResponse{Ttl: -2}, nil // Key doesn't exist
+		return &pb_kv.TTLResponse{Ttl: -2}, nil // Key doesn't exist
 	}
-	return &proto.TTLResponse{Ttl: int64(ttl.Seconds())}, nil
+	return &pb_kv.TTLResponse{Ttl: int64(ttl.Seconds())}, nil
 }
 
-func (s *OmnidictServer) Update(ctx context.Context, req *proto.UpdateRequest) (*proto.UpdateResponse, error) {
+func (s *OmnidictServer) Update(ctx context.Context, req *pb_kv.UpdateRequest) (*pb_kv.UpdateResponse, error) {
 	if !s.Ring.Exists(req.Key) {
-		return &proto.UpdateResponse{Success: false, Message: "Key not found"}, nil
+		return &pb_kv.UpdateResponse{Success: false, Message: "Key not found"}, nil
 	}
 	
 	// Preserve existing TTL
 	ttl, _ := s.Ring.GetTTL(req.Key)
 	err := s.Ring.SetWithReplication(req.Key, req.Value, ttl)
 	if err != nil {
-		return &proto.UpdateResponse{Success: false, Message: err.Error()}, nil
+		return &pb_kv.UpdateResponse{Success: false, Message: err.Error()}, nil
 	}
-	return &proto.UpdateResponse{Success: true, Message: "Updated successfully"}, nil
+	return &pb_kv.UpdateResponse{Success: true, Message: "Updated successfully"}, nil
 }
 
-func (s *OmnidictServer) GetNodeInfo(ctx context.Context, req *proto.NodeInfoRequest) (*proto.NodeInfoResponse, error) {
+func (s *OmnidictServer) GetNodeInfo(ctx context.Context, req *pb_kv.NodeInfoRequest) (*pb_kv.NodeInfoResponse, error) {
 	nodeNames := s.Ring.GetNodeNames()
-	return &proto.NodeInfoResponse{
+	return &pb_kv.NodeInfoResponse{
 		NodeId:     "node-1",
 		Address:    "localhost:50051",
 		Status:     "healthy",

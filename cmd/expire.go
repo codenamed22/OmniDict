@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"omnidict/client"
-	"omnidict/prot/kv"
+	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )

@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"omnidict/client"
-	"omnidict/proto/kv	"
+	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )
