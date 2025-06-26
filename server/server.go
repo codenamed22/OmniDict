@@ -7,9 +7,9 @@ import (
 	"time"
 
 	pb_kv "omnidict/proto/kv"
-	pb_ring "omnidict/proto/ring"
+	// pb_ring "omnidict/proto/ring" will be used later
 	"omnidict/ring"
-	"omnidict/store"
+	// "omnidict/store" later
 
 	"google.golang.org/grpc"
 )
@@ -122,20 +122,4 @@ func (s *OmnidictServer) GetNodeInfo(ctx context.Context, req *pb_kv.NodeInfoReq
 		TotalNodes: int32(len(nodeNames)),
 		Nodes:      nodeNames,
 	}, nil
-}
-
-func StartServer() {
-	lis, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-
-	s := grpc.NewServer()
-	server := NewOmnidictServer()
-	proto.RegisterOmnidictServiceServer(s, server)
-
-	log.Printf("Server listening at %v", lis.Addr())
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
 }

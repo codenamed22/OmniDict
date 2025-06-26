@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"log"
 	"strings"
 
 	"omnidict/client"
-	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )
@@ -20,8 +18,7 @@ var keysCmd = &cobra.Command{
 		if len(args) > 0 {
 			pattern = args[0]
 		}
-		req := &proto.KeysRequest{Pattern: pattern}
-		resp, err := client.Client.Keys(context.Background(), req)
+		resp, err := client.Keys(pattern)
 		if err != nil {
 			log.Fatalf("Keys failed: %v", err)
 		}

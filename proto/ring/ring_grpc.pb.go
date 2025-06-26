@@ -27,6 +27,7 @@ const (
 	RingService_Put_FullMethodName                  = "/ring.RingService/Put"
 	RingService_Get_FullMethodName                  = "/ring.RingService/Get"
 	RingService_Delete_FullMethodName               = "/ring.RingService/Delete"
+	RingService_HealthCheck_FullMethodName          = "/ring.RingService/HealthCheck"
 )
 
 // RingServiceClient is the client API for RingService service.
@@ -39,6 +40,7 @@ type RingServiceClient interface {
 	Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
+	HealthCheck(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error)
 }
 
 type ringServiceClient struct {
@@ -109,6 +111,16 @@ func (c *ringServiceClient) Delete(ctx context.Context, in *DeleteRequest, opts 
 	return out, nil
 }
 
+func (c *ringServiceClient) HealthCheck(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(HealthResponse)
+	err := c.cc.Invoke(ctx, RingService_HealthCheck_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RingServiceServer is the server API for RingService service.
 // All implementations must embed UnimplementedRingServiceServer
 // for forward compatibility.
@@ -119,6 +131,7 @@ type RingServiceServer interface {
 	Put(context.Context, *PutRequest) (*PutResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
+	HealthCheck(context.Context, *HealthRequest) (*HealthResponse, error)
 	mustEmbedUnimplementedRingServiceServer()
 }
 
@@ -146,6 +159,9 @@ func (UnimplementedRingServiceServer) Get(context.Context, *GetRequest) (*GetRes
 }
 func (UnimplementedRingServiceServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedRingServiceServer) HealthCheck(context.Context, *HealthRequest) (*HealthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
 }
 func (UnimplementedRingServiceServer) mustEmbedUnimplementedRingServiceServer() {}
 func (UnimplementedRingServiceServer) testEmbeddedByValue()                     {}
@@ -276,6 +292,24 @@ func _RingService_Delete_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RingService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RingServiceServer).HealthCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RingService_HealthCheck_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RingServiceServer).HealthCheck(ctx, req.(*HealthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RingService_ServiceDesc is the grpc.ServiceDesc for RingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -306,6 +340,10 @@ var RingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Delete",
 			Handler:    _RingService_Delete_Handler,
+		},
+		{
+			MethodName: "HealthCheck",
+			Handler:    _RingService_HealthCheck_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

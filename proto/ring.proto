@@ -12,11 +12,13 @@ service RingService {
   rpc Put(PutRequest) returns (PutResponse);
   rpc Get(GetRequest) returns (GetResponse);
   rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
 }
 
 message NodeRequest {
   string key = 1;
   string node = 2;
+  string address = 3;
 }
 
 message NodeResponse {
@@ -50,3 +52,13 @@ message DeleteResponse {
 }
 
 message Empty {}
+
+
+message HealthResponse {
+  bool healthy = 1;
+  string status = 2;
+}
+
+message HealthRequest {
+  string node = 1;
+}

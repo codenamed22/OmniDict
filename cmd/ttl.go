@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"context"
 	"log"
 
 	"omnidict/client"
-	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )
@@ -15,8 +13,7 @@ var ttlCmd = &cobra.Command{
 	Short: "Get time to live for a key",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		req := &proto.TTLRequest{Key: args[0]}  // Changed from pb.TtlRequest to proto.TTLRequest
-		resp, err := client.Client.TTL(context.Background(), req)  // Changed from client.GrpcClient to client.Client
+		resp, err := client.TTL(args[0])  
 		if err != nil {
 			log.Fatalf("TTL failed: %v", err)
 		}

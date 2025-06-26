@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"context"
 	"log"
 
 	"omnidict/client"
-	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )
@@ -15,11 +13,7 @@ var updateCmd = &cobra.Command{
 	Short: "Update an existing key",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		req := &proto.UpdateRequest{
-			Key:   args[0],
-			Value: args[1],
-		}
-		resp, err := client.Client.Update(context.Background(), req)  // Changed from client.GrpcClient to client.Client
+		resp, err := client.Update(args[0], []byte(args[1]))
 		if err != nil {
 			log.Fatalf("Update failed: %v", err)
 		}

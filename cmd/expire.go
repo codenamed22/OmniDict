@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"log"
 	"strconv"
 
 	"omnidict/client"
-	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )
@@ -21,11 +19,7 @@ var expireCmd = &cobra.Command{
 			log.Fatalf("Invalid TTL: %v", err)
 		}
 		
-		req := &proto.ExpireRequest{
-			Key: args[0],
-			Ttl: ttl,  // Changed from TtlSeconds to Ttl
-		}
-		resp, err := client.Client.Expire(context.Background(), req)  // Changed from client.GrpcClient to client.Client
+		resp, err := client.Expire(args[0], ttl)
 		if err != nil {
 			log.Fatalf("Expire failed: %v", err)
 		}

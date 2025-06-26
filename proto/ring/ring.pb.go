@@ -27,6 +27,7 @@ type NodeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Node          string                 `protobuf:"bytes,2,opt,name=node,proto3" json:"node,omitempty"`
+	Address       string                 `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -71,6 +72,13 @@ func (x *NodeRequest) GetKey() string {
 func (x *NodeRequest) GetNode() string {
 	if x != nil {
 		return x.Node
+	}
+	return ""
+}
+
+func (x *NodeRequest) GetAddress() string {
+	if x != nil {
+		return x.Address
 	}
 	return ""
 }
@@ -435,15 +443,112 @@ func (*Empty) Descriptor() ([]byte, []int) {
 	return file_ring_proto_rawDescGZIP(), []int{8}
 }
 
+type HealthResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Healthy       bool                   `protobuf:"varint,1,opt,name=healthy,proto3" json:"healthy,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HealthResponse) Reset() {
+	*x = HealthResponse{}
+	mi := &file_ring_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HealthResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HealthResponse) ProtoMessage() {}
+
+func (x *HealthResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ring_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
+func (*HealthResponse) Descriptor() ([]byte, []int) {
+	return file_ring_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *HealthResponse) GetHealthy() bool {
+	if x != nil {
+		return x.Healthy
+	}
+	return false
+}
+
+func (x *HealthResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type HealthRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Node          string                 `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HealthRequest) Reset() {
+	*x = HealthRequest{}
+	mi := &file_ring_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HealthRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HealthRequest) ProtoMessage() {}
+
+func (x *HealthRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ring_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HealthRequest.ProtoReflect.Descriptor instead.
+func (*HealthRequest) Descriptor() ([]byte, []int) {
+	return file_ring_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *HealthRequest) GetNode() string {
+	if x != nil {
+		return x.Node
+	}
+	return ""
+}
+
 var File_ring_proto protoreflect.FileDescriptor
 
 const file_ring_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"ring.proto\x12\x04ring\"3\n" +
+	"ring.proto\x12\x04ring\"M\n" +
 	"\vNodeRequest\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x12\n" +
-	"\x04node\x18\x02 \x01(\tR\x04node\"\"\n" +
+	"\x04node\x18\x02 \x01(\tR\x04node\x12\x18\n" +
+	"\aaddress\x18\x03 \x01(\tR\aaddress\"\"\n" +
 	"\fNodeResponse\x12\x12\n" +
 	"\x04node\x18\x01 \x01(\tR\x04node\"F\n" +
 	"\n" +
@@ -462,14 +567,20 @@ const file_ring_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\"*\n" +
 	"\x0eDeleteResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\a\n" +
-	"\x05Empty2\xc3\x02\n" +
+	"\x05Empty\"B\n" +
+	"\x0eHealthResponse\x12\x18\n" +
+	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\"#\n" +
+	"\rHealthRequest\x12\x12\n" +
+	"\x04node\x18\x01 \x01(\tR\x04node2\xfd\x02\n" +
 	"\vRingService\x12:\n" +
 	"\x11GetNodeForRequest\x12\x11.ring.NodeRequest\x1a\x12.ring.NodeResponse\x123\n" +
 	"\x11AddNodeForRequest\x12\x11.ring.NodeRequest\x1a\v.ring.Empty\x126\n" +
 	"\x14RemoveNodeForRequest\x12\x11.ring.NodeRequest\x1a\v.ring.Empty\x12*\n" +
 	"\x03Put\x12\x10.ring.PutRequest\x1a\x11.ring.PutResponse\x12*\n" +
 	"\x03Get\x12\x10.ring.GetRequest\x1a\x11.ring.GetResponse\x123\n" +
-	"\x06Delete\x12\x13.ring.DeleteRequest\x1a\x14.ring.DeleteResponseB\bZ\x06./ringb\x06proto3"
+	"\x06Delete\x12\x13.ring.DeleteRequest\x1a\x14.ring.DeleteResponse\x128\n" +
+	"\vHealthCheck\x12\x13.ring.HealthRequest\x1a\x14.ring.HealthResponseB\bZ\x06./ringb\x06proto3"
 
 var (
 	file_ring_proto_rawDescOnce sync.Once
@@ -483,7 +594,7 @@ func file_ring_proto_rawDescGZIP() []byte {
 	return file_ring_proto_rawDescData
 }
 
-var file_ring_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_ring_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_ring_proto_goTypes = []any{
 	(*NodeRequest)(nil),    // 0: ring.NodeRequest
 	(*NodeResponse)(nil),   // 1: ring.NodeResponse
@@ -494,25 +605,29 @@ var file_ring_proto_goTypes = []any{
 	(*DeleteRequest)(nil),  // 6: ring.DeleteRequest
 	(*DeleteResponse)(nil), // 7: ring.DeleteResponse
 	(*Empty)(nil),          // 8: ring.Empty
+	(*HealthResponse)(nil), // 9: ring.HealthResponse
+	(*HealthRequest)(nil),  // 10: ring.HealthRequest
 }
 var file_ring_proto_depIdxs = []int32{
-	0, // 0: ring.RingService.GetNodeForRequest:input_type -> ring.NodeRequest
-	0, // 1: ring.RingService.AddNodeForRequest:input_type -> ring.NodeRequest
-	0, // 2: ring.RingService.RemoveNodeForRequest:input_type -> ring.NodeRequest
-	2, // 3: ring.RingService.Put:input_type -> ring.PutRequest
-	4, // 4: ring.RingService.Get:input_type -> ring.GetRequest
-	6, // 5: ring.RingService.Delete:input_type -> ring.DeleteRequest
-	1, // 6: ring.RingService.GetNodeForRequest:output_type -> ring.NodeResponse
-	8, // 7: ring.RingService.AddNodeForRequest:output_type -> ring.Empty
-	8, // 8: ring.RingService.RemoveNodeForRequest:output_type -> ring.Empty
-	3, // 9: ring.RingService.Put:output_type -> ring.PutResponse
-	5, // 10: ring.RingService.Get:output_type -> ring.GetResponse
-	7, // 11: ring.RingService.Delete:output_type -> ring.DeleteResponse
-	6, // [6:12] is the sub-list for method output_type
-	0, // [0:6] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: ring.RingService.GetNodeForRequest:input_type -> ring.NodeRequest
+	0,  // 1: ring.RingService.AddNodeForRequest:input_type -> ring.NodeRequest
+	0,  // 2: ring.RingService.RemoveNodeForRequest:input_type -> ring.NodeRequest
+	2,  // 3: ring.RingService.Put:input_type -> ring.PutRequest
+	4,  // 4: ring.RingService.Get:input_type -> ring.GetRequest
+	6,  // 5: ring.RingService.Delete:input_type -> ring.DeleteRequest
+	10, // 6: ring.RingService.HealthCheck:input_type -> ring.HealthRequest
+	1,  // 7: ring.RingService.GetNodeForRequest:output_type -> ring.NodeResponse
+	8,  // 8: ring.RingService.AddNodeForRequest:output_type -> ring.Empty
+	8,  // 9: ring.RingService.RemoveNodeForRequest:output_type -> ring.Empty
+	3,  // 10: ring.RingService.Put:output_type -> ring.PutResponse
+	5,  // 11: ring.RingService.Get:output_type -> ring.GetResponse
+	7,  // 12: ring.RingService.Delete:output_type -> ring.DeleteResponse
+	9,  // 13: ring.RingService.HealthCheck:output_type -> ring.HealthResponse
+	7,  // [7:14] is the sub-list for method output_type
+	0,  // [0:7] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_ring_proto_init() }
@@ -526,7 +641,7 @@ func file_ring_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ring_proto_rawDesc), len(file_ring_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

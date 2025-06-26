@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"context"
 	"log"
 
 	"omnidict/client"
-	"omnidict/proto/kv"
 
 	"github.com/spf13/cobra"
 )
@@ -15,8 +13,7 @@ var getCmd = &cobra.Command{
 	Short: "Retrieve a value by key",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		req := &proto.GetRequest{Key: args[0]}
-		resp, err := client.Client.Get(context.Background(), req)
+		resp, err := client.Get(args[0])
 		if err != nil {
 			log.Fatalf("Get failed: %v", err)
 		}

@@ -10,12 +10,13 @@ import (
 	"errors"
 	"time"
 	"log"
+	"context"
 	"net"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
+	// "google.golang.org/grpc/credentials/insecure"
 	pb_ring "omnidict/proto/ring"
 	"omnidict/store"
 
@@ -38,7 +39,7 @@ type RingServer struct {
 
 // consistent hash ring
 type HashRing struct {
-	mu 			 sync.RWMutex 				  // Mutex for thread safety
+	mu 			 sync.RWMutex			  // mu for thread safety
 	nodes        map[uint32]string            // hash -> node name
 	nodeNames    []string                     // list of actual nodes
 	sortedHashes []uint32                     // sorted hash values for binary search
@@ -121,8 +122,8 @@ func (hr *HashRing) hash(key string) uint32 {
 
 // adding a new node to the hash ring
 func (hr *HashRing) AddNode(nodeName string) {
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 
 	// Check if node already exists
 	for _, name := range hr.nodeNames {
@@ -155,8 +156,8 @@ func (hr *HashRing) AddNode(nodeName string) {
 
 // removes a node from the hash ring
 func (hr *HashRing) RemoveNode(nodeName string) {
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 
 	// Find and remove from nodeNames
 	nodeIndex := -1
@@ -197,8 +198,8 @@ func (hr *HashRing) RemoveNode(nodeName string) {
 
 // returns the node responsible for a given key
 func (hr *HashRing) GetNode(key string) string {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	if len(hr.sortedHashes) == 0 {
 		return ""
@@ -221,8 +222,8 @@ func (hr *HashRing) GetNode(key string) string {
 
 // NEW: Returns N healthy nodes responsible for a key (for replication)
 func (hr *HashRing) GetNodesForKey(key string, count int) []string {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	if len(hr.sortedHashes) == 0 {
 		return []string{}
@@ -275,8 +276,8 @@ func (hr *HashRing) Set(key, value string) {
 		return
 	}
 
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 
 	// Store in the specific node's store
 	if nodeStore, exists := hr.nodeStores[node]; exists {
@@ -295,8 +296,8 @@ func (hr *HashRing) SetWithReplication(key, value string, ttl time.Duration) err
 		return errors.New("no healthy nodes available")
 	}
 
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 
 	metadata := keyMetadata{
 		value:      value,
@@ -330,8 +331,8 @@ func (hr *HashRing) Get(key string) (string, bool) {
 		return "", false
 	}
 
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	// Retrieve from the specific node's store
 	if nodeStore, exists := hr.nodeStores[node]; exists {
@@ -346,9 +347,9 @@ func (hr *HashRing) Get(key string) (string, bool) {
 func (hr *HashRing) GetWithReplication(key string) (string, error) {
 
 	// expiration checking
-	hr.mutex.RLock()
+	hr.mu.RLock()
 	metadata, exists := hr.keyMetadata[key]
-	hr.mutex.RUnlock()
+	hr.mu.RUnlock()
 
 	if !exists {
 		return "", errors.New("key not found")
@@ -364,8 +365,8 @@ func (hr *HashRing) GetWithReplication(key string) (string, error) {
 		return "", errors.New("no healthy nodes available")
 	}
 
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	values := make(map[string]int) // value -> count
 	var mostCommonValue string
@@ -393,16 +394,16 @@ func (hr *HashRing) GetWithReplication(key string) (string, error) {
 
 // expiration check helper method
 func (hr *HashRing) isKeyExpired(key string) bool {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 	metadata, exists := hr.keyMetadata[key]
 	return exists && time.Now().After(metadata.expiration)
 }
 
 // TTL
 func (hr *HashRing) GetTTL(key string) (time.Duration, bool) {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	metadata, exists := hr.keyMetadata[key]
 	if !exists {
@@ -423,8 +424,8 @@ func (hr *HashRing) Delete(key string) error {
 		return errors.New("no healthy nodes available")
 	}
 
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 
 	successCount := 0
 	for _, nodeName := range nodes {
@@ -454,8 +455,8 @@ func (hr *HashRing) Exists(key string) bool {
 
 // NEW: Get all keys across all nodes
 func (hr *HashRing) GetAllKeys() []string {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	keySet := make(map[string]bool)
 	for _, nodeStore := range hr.nodeStores {
@@ -488,8 +489,8 @@ func (hr *HashRing) GetKeysWithPrefix(prefix string) []string {
 
 // NEW: Health check functionality
 func (hr *HashRing) MarkNodeUnhealthy(nodeName string) {
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 
 	if _, exists := hr.nodeHealth[nodeName]; exists {
 		hr.nodeHealth[nodeName] = false
@@ -498,8 +499,8 @@ func (hr *HashRing) MarkNodeUnhealthy(nodeName string) {
 }
 
 func (hr *HashRing) MarkNodeHealthy(nodeName string) {
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 
 	if _, exists := hr.nodeHealth[nodeName]; exists {
 		hr.nodeHealth[nodeName] = true
@@ -508,8 +509,8 @@ func (hr *HashRing) MarkNodeHealthy(nodeName string) {
 }
 
 func (hr *HashRing) IsNodeHealthy(nodeName string) bool {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	healthy, exists := hr.nodeHealth[nodeName]
 	return exists && healthy
@@ -517,8 +518,8 @@ func (hr *HashRing) IsNodeHealthy(nodeName string) bool {
 
 // NEW: Get healthy nodes only
 func (hr *HashRing) GetHealthyNodes() []string {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	healthy := make([]string, 0)
 	for nodeName, isHealthy := range hr.nodeHealth {
@@ -532,8 +533,8 @@ func (hr *HashRing) GetHealthyNodes() []string {
 
 // NEW: Load balancing - get least loaded node
 func (hr *HashRing) GetLeastLoadedNode() string {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	var leastLoaded string
 	minLoad := int(^uint(0) >> 1) // max int
@@ -550,8 +551,8 @@ func (hr *HashRing) GetLeastLoadedNode() string {
 
 // NEW: Get node information
 func (hr *HashRing) GetNodeInfo(nodeName string) (NodeInfo, error) {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	if _, exists := hr.nodeHealth[nodeName]; !exists {
 		return NodeInfo{}, errors.New("node not found")
@@ -568,8 +569,8 @@ func (hr *HashRing) GetNodeInfo(nodeName string) (NodeInfo, error) {
 
 // NEW: Get cluster information
 func (hr *HashRing) GetClusterInfo() map[string]NodeInfo {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	info := make(map[string]NodeInfo)
 	for nodeName := range hr.nodeHealth {
@@ -587,15 +588,15 @@ func (hr *HashRing) GetClusterInfo() map[string]NodeInfo {
 
 // NEW: Set consistency level
 func (hr *HashRing) SetConsistencyLevel(level ConsistencyLevel) {
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 	hr.consistencyLevel = level
 }
 
 // NEW: Serialize hash ring state
 func (hr *HashRing) SerializeState() ([]byte, error) {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	state := map[string]interface{}{
 		"nodes":              hr.nodeNames,
@@ -626,8 +627,8 @@ func (hr *HashRing) getRequiredSuccessCount(totalReplicas int) int {
 
 // returns all keys stored on a specific node
 func (hr *HashRing) GetNodeKeys(nodeName string) []string {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	keys := make([]string, 0)
 
@@ -642,8 +643,8 @@ func (hr *HashRing) GetNodeKeys(nodeName string) []string {
 
 // returns a copy of all key-value pairs for a specific node
 func (hr *HashRing) GetNodeStore(nodeName string) map[string]string {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	result := make(map[string]string)
 
@@ -658,8 +659,8 @@ func (hr *HashRing) GetNodeStore(nodeName string) map[string]string {
 
 // returns the total number of keys across all nodes
 func (hr *HashRing) GetTotalKeyCount() int {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	total := 0
 	for _, nodeStore := range hr.nodeStores {
@@ -670,17 +671,17 @@ func (hr *HashRing) GetTotalKeyCount() int {
 
 // adds a new node with its gRPC address
 func (hr *HashRing) AddNodeWithAddress(nodeName, address string) {
-	hr.mutex.Lock()
+	hr.mu.Lock()
 	hr.nodeAddresses[nodeName] = address
-	hr.mutex.Unlock()
+	hr.mu.Unlock()
 	
 	hr.AddNode(nodeName)
 }
 
 // returns the gRPC address for a node
 func (hr *HashRing) GetNodeAddress(nodeName string) (string, bool) {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	address, exists := hr.nodeAddresses[nodeName]
 	return address, exists
@@ -688,8 +689,8 @@ func (hr *HashRing) GetNodeAddress(nodeName string) (string, bool) {
 
 // returns keys that should move to a new node
 func (hr *HashRing) GetKeysToMigrate(newNode string) []string {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	keysToMigrate := make([]string, 0)
 
@@ -713,8 +714,8 @@ func (hr *HashRing) GetKeysToMigrate(newNode string) []string {
 
 // moves a key from one node to another
 func (hr *HashRing) MigrateKey(key, fromNode, toNode string) bool {
-	hr.mutex.Lock()
-	defer hr.mutex.Unlock()
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 
 	// Get value from source node
 	fromStore, fromExists := hr.nodeStores[fromNode]
@@ -757,8 +758,8 @@ func (hr *HashRing) BulkMigrateKeys(keys []string, fromNode, toNode string) int 
 
 // Enhanced print function with health and load info
 func (hr *HashRing) PrintRingStatus() {
-	hr.mutex.RLock()
-	defer hr.mutex.RUnlock()
+	hr.mu.RLock()
+	defer hr.mu.RUnlock()
 
 	fmt.Printf("\n=== Hash Ring Status ===\n")
 	fmt.Printf("Nodes: %v\n", hr.nodeNames)
@@ -818,8 +819,8 @@ func (hr *HashRing) SimulateKeyMovement(keys []string) {
 }
 
 func (hr *HashRing) GetNodeNames() []string {
-    hr.mutex.RLock()
-    defer hr.mutex.RUnlock()
+    hr.mu.RLock()
+    defer hr.mu.RUnlock()
     return hr.nodeNames
 }
 
@@ -957,7 +958,7 @@ func StartServer(port string, virtualNodes int, store *store.Store) {
 	}
 
 	currentNode := "localhost:" + port
-	hashRing := NewHashRing(virtualNodes, currentNode)
+	hashRing := NewHashRing(virtualNodes)
 	hashRing.AddNode(currentNode)
 
 	grpcServer := grpc.NewServer()
