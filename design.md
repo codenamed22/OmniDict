@@ -95,6 +95,8 @@ Nodes in the OmniDict cluster use gRPC to talk to each other and to the client.
 
 What is CLI and how do CLI commands works?
 
+CLI (Command-Line Interface) is a text-based interface that allows users to interact with a program by typing commands into a terminal/console.
+
 The OmniDict CLI uses Go’s Cobra library to define modular, self-contained commands like put, get, delete, and ttl for managing key-value data. 
 
 Each command maps to a gRPC function, allowing users to interact with the distributed store from the terminal as if calling local functions. 
