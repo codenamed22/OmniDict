@@ -88,3 +88,30 @@ Function call abstraction (looks like calling a function even though it’s over
 Use in this project:
 
 Nodes in the OmniDict cluster use gRPC to talk to each other and to the client.
+
+
+
+---
+
+What is CLI and how do CLI commands works?
+
+The OmniDict CLI uses Go’s Cobra library to define modular, self-contained commands like put, get, delete, and ttl for managing key-value data. 
+
+Each command maps to a gRPC function, allowing users to interact with the distributed store from the terminal as if calling local functions. 
+
+Cobra also generates intuitive --help pages and supports argument parsing, making the CLI scriptable and easy to extend.
+
+Although it is limited to terminal interaction it allows for clean command organization, cross-platform utility and quick prototyping.
+
+The CLI commands used and their functions are :-
+  
+  delete   -   Delete a key-value pair
+  exists   -   Check if key exists
+  expire   -   Set expiration time for a key
+  flush    -   Clear all keys
+  get      -   Retrieve a value by key
+  help     -   Help about any command
+  keys     -   List keys matching pattern
+  put      -   Store a key-value pair
+  ttl      -   Get time to live for a key
+  update   -   Update an existing key
