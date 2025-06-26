@@ -47,11 +47,13 @@ It ensures that all nodes holding the same shard agree on updates, even if some 
 
 It handles:
 
-Leader election
+Leader election - reads, writes and replicates them to followers
 
 Log replication (Put operations)
 
 Fault recovery
+
+Consistency Guarantees
 
 
 
@@ -60,6 +62,8 @@ Why Raft:
 Makes the key-value store fault-tolerant.
 
 Ensures strong consistency across replicas of the same shard.
+
+Makes OmniDict resilient to failiures and strongly consistent
 
 
 
