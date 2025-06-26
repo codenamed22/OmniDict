@@ -290,7 +290,7 @@ func (hr *HashRing) Set(key, value string) {
 }
 
 // NEW: Set with replication support
-func (hr *HashRing) SetWithReplication(key, value string, ttl time.Duration) error {
+func (hr *HashRing) PutWithReplication(key, value string, ttl time.Duration) error {
 	nodes := hr.GetNodesForKey(key, hr.replicationFactor)
 	if len(nodes) == 0 {
 		return errors.New("no healthy nodes available")
@@ -881,7 +881,7 @@ func (s *RingServer) Put(ctx context.Context, req *pb_ring.PutRequest) (*pb_ring
 	targetNode := s.hashRing.GetNode(key)
 
 	if targetNode == s.currentNode {
-		if err := s.store.Put(key, req.GetValue(), time.Duration(req.Ttl)*time.Second); err != nil {
+		if err := s.store.Put(key, string(req.GetValue()), time.Duration(req.Ttl)*time.Second); err != nil {
 			return nil, status.Errorf(codes.Internal, "storage error: %v", err)
 		}
 		return &pb_ring.PutResponse{Success: true}, nil
@@ -894,11 +894,11 @@ func (s *RingServer) Get(ctx context.Context, req *pb_ring.GetRequest) (*pb_ring
 	targetNode := s.hashRing.GetNode(key)
 
 	if targetNode == s.currentNode {
-		value, err := s.store.Get(key)
-		if err != nil {
-			return nil, status.Errorf(codes.NotFound, "key not found: %v", err)
+		value, exists := s.store.Get(key)
+		if !exists {
+			return nil, status.Errorf(codes.NotFound, "key not found: %v", exists)
 		}
-		return &pb_ring.GetResponse{Value: value}, nil
+		return &pb_ring.GetResponse{Value: []byte(value)}, nil
 	}
 	return s.forwardGetRequest(targetNode, req)
 }

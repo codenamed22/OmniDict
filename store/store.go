@@ -1,39 +1,37 @@
 package store
 
 import (
+	"errors"
 	"sync"
 	"time"
-	"errors"
+	"strings"
 )
 
-// represents the key-value storage
+// Represents the key-value storage
 type Store struct {
 	mu       sync.RWMutex
 	data     map[string]item
-	replicas map[string]map[string]item // replicaID -> key -> item
 }
 
 type item struct {
-	value      []byte
+	value      string
 	expiration time.Time
 }
 
 var (
 	ErrKeyNotFound   = errors.New("key not found")
 	ErrKeyExpired    = errors.New("key expired")
-	ErrReplicaExists = errors.New("replica already exists")
 )
 
-// creates a new Store instance
+// Creates a new Store instance
 func NewStore() *Store {
 	return &Store{
-		data:     make(map[string]item),
-		replicas: make(map[string]map[string]item),
+		data: make(map[string]item),
 	}
 }
 
-// stores a key-value pair with optional TTL
-func (s *Store) Put(key string, value []byte, ttl time.Duration) error {
+// Stores a key-value pair with optional TTL
+func (s *Store) Put(key, value string, ttl time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -49,74 +47,102 @@ func (s *Store) Put(key string, value []byte, ttl time.Duration) error {
 	return nil
 }
 
-// retrieves a value by key
-func (s *Store) Get(key string) ([]byte, error) {
+// Retrieves a value by key
+func (s *Store) Get(key string) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	item, exists := s.data[key]
 	if !exists {
-		return nil, ErrKeyNotFound
+		return "", false
 	}
 
 	if !item.expiration.IsZero() && time.Now().After(item.expiration) {
-		return nil, ErrKeyExpired
+		return "", false
 	}
 
-	return item.value, nil
+	return item.value, true
 }
 
-// removes a key-value pair
+// Checks if key exists
+func (s *Store) Exists(key string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	
+	_, exists := s.data[key]
+	if exists {
+		// Check expiration
+		item := s.data[key]
+		if !item.expiration.IsZero() && time.Now().After(item.expiration) {
+			return false
+		}
+	}
+	return exists
+}
+
+// Removes a key-value pair
 func (s *Store) Delete(key string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.data, key)
 }
 
-//  handles data replication to other nodes
-func (s *Store) Replicate(replicaID, key string, value []byte, ttl time.Duration) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if _, exists := s.replicas[replicaID]; !exists {
-		s.replicas[replicaID] = make(map[string]item)
-	}
-
-	exp := time.Time{}
-	if ttl > 0 {
-		exp = time.Now().Add(ttl)
-	}
-
-	s.replicas[replicaID][key] = item{
-		value:      value,
-		expiration: exp,
-	}
-	return nil
-}
-
-// retrieves replicated data
-func (s *Store) GetReplica(replicaID, key string) ([]byte, error) {
+// Returns all keys
+func (s *Store) GetAllKeys() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	replica, exists := s.replicas[replicaID]
-	if !exists {
-		return nil, ErrKeyNotFound
+	keys := make([]string, 0, len(s.data))
+	for k := range s.data {
+		keys = append(keys, k)
 	}
-
-	item, exists := replica[key]
-	if !exists {
-		return nil, ErrKeyNotFound
-	}
-
-	if !item.expiration.IsZero() && time.Now().After(item.expiration) {
-		return nil, ErrKeyExpired
-	}
-
-	return item.value, nil
+	return keys
 }
 
-// runs a background go routine to clean expired keys
+// Returns keys with prefix
+func (s *Store) GetKeysWithPrefix(prefix string) []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var keys []string
+	for k := range s.data {
+		if strings.HasPrefix(k, prefix) {
+			keys = append(keys, k)
+		}
+	}
+	return keys
+}
+
+// Clears all data
+func (s *Store) Flush() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data = make(map[string]item)
+}
+
+// Gets remaining TTL for a key
+func (s *Store) GetTTL(key string) (time.Duration, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	item, exists := s.data[key]
+	if !exists {
+		return 0, false
+	}
+
+	if item.expiration.IsZero() {
+		return 0, true // No expiration (permanent)
+	}
+
+	remaining := time.Until(item.expiration)
+	if remaining <= 0 {
+		return 0, false // Expired
+	}
+
+	return remaining, true
+}
+
+// Runs a background go routine to clean expired keys
 func (s *Store) StartTTLCleaner(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	go func() {
@@ -131,66 +157,9 @@ func (s *Store) cleanupExpired() {
 	defer s.mu.Unlock()
 
 	now := time.Now()
-
-	// Clean main data
 	for key, item := range s.data {
 		if !item.expiration.IsZero() && now.After(item.expiration) {
 			delete(s.data, key)
 		}
 	}
-
-	// Clean replicas
-	for replicaID, replica := range s.replicas {
-		for key, item := range replica {
-			if !item.expiration.IsZero() && now.After(item.expiration) {
-				delete(replica, key)
-			}
-		}
-		
-		// Remove empty replicas
-		if len(replica) == 0 {
-			delete(s.replicas, replicaID)
-		}
-	}
-}
-
-// creates a consistent snapshot of the store
-func (s *Store) Snapshot() map[string][]byte {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	snapshot := make(map[string][]byte)
-	for key, item := range s.data {
-		// Skip expired items
-		if !item.expiration.IsZero() && time.Now().After(item.expiration) {
-			continue
-		}
-		snapshot[key] = item.value
-	}
-	return snapshot
-}
-
-// loads data from a snapshot
-func (s *Store) Restore(data map[string][]byte) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	for key, value := range data {
-		s.data[key] = item{
-			value:      value,
-			expiration: time.Time{}, // No TTL for restored items
-		}
-	}
-}
-
-// returns storage statistics
-func (s *Store) Stats() (keys int, size int64) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	keys = len(s.data)
-	for _, item := range s.data {
-		size += int64(len(item.value))
-	}
-	return keys, size
 }

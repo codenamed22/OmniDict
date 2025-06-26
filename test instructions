@@ -1,5 +1,14 @@
 go run main.go server - runs the server in one terminal
 open another terminal as the client and run functions like - 
+./omnidict delete key
+./omnidict exists key
+./omnidict expire key time(in seconds)
+./omnidict flush
+./omnidict get key
+./omnidict keys
 ./omnidict put key value
-./omnidict get -h (-h will give help like the man pages in your normal cmd)
-if there is any problem do tell me :P
+./omnidict ttl key
+./omnidict update key value
+./omnidict <command> -h/--help (returns stuff like the man pages in your normal cmd - only has the usage as of now we can add these when we add the documentaion)
+if ./omnidict does not work try 'go run main.go' instead of that followed by the command and the parameters it take
+if there is any problem do tell us :D

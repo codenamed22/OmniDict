@@ -6,7 +6,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	pb_kv "omnidict/proto/kv" // Correct import for KV service
+	pb_kv "omnidict/proto/kv"
 )
 
 var Conn *grpc.ClientConn
