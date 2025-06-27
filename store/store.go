@@ -93,8 +93,10 @@ func (s *Store) GetAllKeys() []string {
 	defer s.mu.RUnlock()
 
 	keys := make([]string, 0, len(s.data))
-	for k := range s.data {
-		keys = append(keys, k)
+	for k, item := range s.data {
+		if item.expiration.IsZero() || !time.Now().After(item.expiration) {
+			keys = append(keys, k)
+		}
 	}
 	return keys
 }
@@ -131,7 +133,7 @@ func (s *Store) GetTTL(key string) (time.Duration, bool) {
 	}
 
 	if item.expiration.IsZero() {
-		return 0, true // No expiration (permanent)
+		return -1, true // No expiration (permanent)
 	}
 
 	remaining := time.Until(item.expiration)
