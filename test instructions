@@ -1,3 +1,5 @@
+go build -o omnidict main.go  -builds the binary file omnidict
+
 go run main.go server - runs the server in one terminal
 open another terminal as the client and run functions like - 
 ./omnidict delete key

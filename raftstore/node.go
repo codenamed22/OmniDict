@@ -1,4 +1,4 @@
-package raftnode
+package raftstore
 
 import (
 	"fmt"

@@ -1,7 +1,7 @@
 package store
 
 import (
-	"errors"
+	// "errors"
 	"sync"
 	"time"
 	"strings"
@@ -18,10 +18,10 @@ type item struct {
 	expiration time.Time
 }
 
-var (
-	ErrKeyNotFound   = errors.New("key not found")
-	ErrKeyExpired    = errors.New("key expired")
-)
+// var (
+// 	ErrKeyNotFound   = errors.New("key not found")
+// 	ErrKeyExpired    = errors.New("key expired")
+// )
 
 // Creates a new Store instance
 func NewStore() *Store {
@@ -144,7 +144,8 @@ func (s *Store) GetTTL(key string) (time.Duration, bool) {
 	return remaining, true
 }
 
-// Runs a background go routine to clean expired keys
+// Raft will handle this
+// // Runs a background go routine to clean expired keys
 func (s *Store) StartTTLCleaner(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	go func() {

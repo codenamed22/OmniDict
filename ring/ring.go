@@ -824,7 +824,7 @@ func (hr *HashRing) GetNodeNames() []string {
     return hr.nodeNames
 }
 
-//gRPC Serve Initialization
+//gRPC Server Initialization
 func NewRingServer(virtualNodes, replicationFactor int, store *store.Store, port string) *RingServer {
 	currentNode := fmt.Sprintf("localhost:%s", port)
 	hashRing := NewHashRingWithReplication(virtualNodes, replicationFactor)
@@ -949,28 +949,4 @@ func (s *RingServer) forwardDeleteRequest(node string, req *pb_ring.DeleteReques
 	defer conn.Close()
 	client := pb_ring.NewRingServiceClient(conn)
 	return client.Delete(context.Background(), req)
-}
-
-func StartServer(port string, virtualNodes int, store *store.Store) {
-	lis, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	currentNode := "localhost:" + port
-	hashRing := NewHashRing(virtualNodes)
-	hashRing.AddNode(currentNode)
-
-	grpcServer := grpc.NewServer()
-	ringServer := &RingServer{
-		hashRing:   hashRing,
-		store:      store,
-		currentNode: currentNode,
-	}
-	pb_ring.RegisterRingServiceServer(grpcServer, ringServer)
-
-	log.Printf("Server started at %s", lis.Addr())
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
 }
