@@ -1,18 +1,23 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
+
+	"omnidict/client"
+
 	"github.com/spf13/cobra"
 )
 
 var flushCmd = &cobra.Command{
 	Use:   "flush",
-	Short: "Delete all keys (dangerous!)",
+	Short: "Clear all keys",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		// 🔄 MOCK
-		fmt.Println("[MOCK] All keys flushed")
-
-		// 🔌 grpcClient.Flush(ctx, &pb.FlushRequest{})
+		resp, err := client.Flush()
+		if err != nil {
+			log.Fatalf("Flush failed: %v", err)
+		}
+		log.Printf("Flush: %v", resp)
 	},
 }
 

@@ -1,21 +1,22 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
+
+	"omnidict/client"
 	"github.com/spf13/cobra"
 )
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete <key>",
-	Short: "Delete a key",
+	Use:   "delete [key]",
+	Short: "Delete a key-value pair",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
-
-		// 🔄 MOCK
-		fmt.Printf("[MOCK] Deleted key '%s'\n", key)
-
-		// 🔌 grpcClient.Delete(ctx, &pb.DeleteRequest{Key: key})
+		resp, err := client.Delete(args[0])
+		if err != nil {
+			log.Fatalf("Delete failed: %v", err)
+		}
+		log.Printf("Delete: %v", resp)
 	},
 }
 

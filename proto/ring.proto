@@ -1,0 +1,64 @@
+// protoc --go_out=. --go-grpc_out=. ring.proto - for regerenerating Go code - go to proto directory
+syntax = "proto3";
+
+package ring;
+
+option go_package = "./ring";
+
+service RingService {
+  rpc GetNodeForRequest(NodeRequest) returns (NodeResponse);
+  rpc AddNodeForRequest(NodeRequest) returns (Empty);
+  rpc RemoveNodeForRequest(NodeRequest) returns (Empty);
+  rpc Put(PutRequest) returns (PutResponse);
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
+}
+
+message NodeRequest {
+  string key = 1;
+  string node = 2;
+  string address = 3;
+}
+
+message NodeResponse {
+  string node = 1;
+}
+
+message PutRequest {
+  string key = 1;
+  bytes value = 2;
+  int64 ttl = 3;
+}
+
+message PutResponse {
+  bool success = 1;
+}
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  bytes value = 1;
+}
+
+message DeleteRequest {
+  string key = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}
+
+message Empty {}
+
+
+message HealthResponse {
+  bool healthy = 1;
+  string status = 2;
+}
+
+message HealthRequest {
+  string node = 1;
+}

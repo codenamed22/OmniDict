@@ -1,28 +1,29 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 	"strconv"
+
+	"omnidict/client"
 
 	"github.com/spf13/cobra"
 )
 
 var expireCmd = &cobra.Command{
-	Use:   "expire <key> <seconds>",
-	Short: "Set TTL on a key",
+	Use:   "expire [key] [seconds]",
+	Short: "Set expiration time for a key",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
-		ttl, err := strconv.Atoi(args[1])
+		ttl, err := strconv.ParseInt(args[1], 10, 64)
 		if err != nil {
-			fmt.Println("Invalid TTL value")
-			return
+			log.Fatalf("Invalid TTL: %v", err)
 		}
-
-		// 🔄 MOCK
-		fmt.Printf("[MOCK] TTL for key '%s' set to %d seconds\n", key, ttl)
-
-		// 🔌 grpcClient.Expire(ctx, &pb.ExpireRequest{Key: key, TTL: int64(ttl)})
+		
+		resp, err := client.Expire(args[0], ttl)
+		if err != nil {
+			log.Fatalf("Expire failed: %v", err)
+		}
+		log.Printf("Expire: %v", resp)
 	},
 }
 
