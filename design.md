@@ -1,6 +1,4 @@
 design.md – Core Concepts & Notes
-
-
 ---
 
 What is Consistent Hashing?

@@ -19,8 +19,20 @@ type Config struct {
 	IsBootstrap bool   // True if this is the first node
 }
 
-// NewRaftNode sets up and returns a Raft instance.
-func NewRaftNode(cfg Config, fsm *FSM, logOutput io.Writer) (*raft.Raft, error) {
+// Node is a wrapper around Raft with a proposal interface
+type Node struct {
+	Raft *raft.Raft
+}
+
+// Propose submits a command to the Raft log
+func (n *Node) Propose(cmd []byte) error {
+	// Apply command with a timeout
+	f := n.Raft.Apply(cmd, 5*time.Second)
+	return f.Error()
+}
+
+// NewRaftNode sets up and returns a Node instance.
+func NewRaftNode(cfg Config, fsm *FSM, logOutput io.Writer) (*Node, error) {
 	// Create data directories if they don't exist
 	if err := os.MkdirAll(cfg.DataDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create raft dir: %v", err)
@@ -70,5 +82,7 @@ func NewRaftNode(cfg Config, fsm *FSM, logOutput io.Writer) (*raft.Raft, error) 
 		r.BootstrapCluster(config)
 	}
 
-	return r, nil
+	// Wrap and return the node
+	return &Node{Raft: r}, nil
 }
+

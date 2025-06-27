@@ -7,7 +7,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/hashicorp/raft"
+	raft "github.com/hashicorp/raft"
 )
 
 // Command represents a Raft command with correct struct tags.
@@ -99,3 +99,4 @@ func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
 
 // Release is a no-op for our snapshot.
 func (s *fsmSnapshot) Release() {}
+
