@@ -1,0 +1,8 @@
+.vscode
+*.md
+*.log
+*.test
+*.tmp
+__pycache__/
+build/
+bin/

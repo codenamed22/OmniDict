@@ -1,36 +1,48 @@
 version: "3.9"
 
 services:
-  node1:
+  omnidict-node1:
     build: .
-    container_name: node1
+    container_name: omnidict-node1
     ports:
-      - "50051:50051"
+      - "5001:5001" # gRPC endpoint for node1
+    volumes:
+      - ./data/node1:/data
     environment:
       - NODE_ID=node1
-    networks:
-      - omninet
+      - NODE_PORT=5001
+      - RAFT_PORT=6001
+      - JOIN_ADDR= # leave empty for bootstrap node
+    command: ["./omnidict", "server"]
 
-  node2:
+  omnidict-node2:
     build: .
-    container_name: node2
+    container_name: omnidict-node2
     ports:
-      - "50052:50051"
+      - "5002:5002"
+    volumes:
+      - ./data/node2:/data
     environment:
       - NODE_ID=node2
-    networks:
-      - omninet
+      - NODE_PORT=5002
+      - RAFT_PORT=6002
+      - JOIN_ADDR=omnidict-node1:5001
+    depends_on:
+      - omnidict-node1
+    command: ["./omnidict", "server"]
 
-  node3:
+  omnidict-node3:
     build: .
-    container_name: node3
+    container_name: omnidict-node3
     ports:
-      - "50053:50051"
+      - "5003:5003"
+    volumes:
+      - ./data/node3:/data
     environment:
       - NODE_ID=node3
-    networks:
-      - omninet
-
-networks:
-  omninet:
-    driver: bridge
+      - NODE_PORT=5003
+      - RAFT_PORT=6003
+      - JOIN_ADDR=omnidict-node1:5001
+    depends_on:
+      - omnidict-node1
+    command: ["./omnidict", "server"]

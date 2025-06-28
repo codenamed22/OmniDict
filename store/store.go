@@ -1,16 +1,15 @@
 package store
 
 import (
-	// "errors"
+	"strings"
 	"sync"
 	"time"
-	"strings"
 )
 
-// Represents the key-value storage
+// Store is an in‑memory thread‑safe key‑value store with optional TTL support.
 type Store struct {
-	mu       sync.RWMutex
-	data     map[string]item
+	mu   sync.RWMutex
+	data map[string]item
 }
 
 type item struct {
@@ -18,134 +17,99 @@ type item struct {
 	expiration time.Time
 }
 
-// var (
-// 	ErrKeyNotFound   = errors.New("key not found")
-// 	ErrKeyExpired    = errors.New("key expired")
-// )
-
-// Creates a new Store instance
+// NewStore returns a fresh Store.
 func NewStore() *Store {
-	return &Store{
-		data: make(map[string]item),
-	}
+	return &Store{data: make(map[string]item)}
 }
 
-// Stores a key-value pair with optional TTL
+// Put inserts/overwrites a key with an optional TTL (0 = no expiry).
 func (s *Store) Put(key, value string, ttl time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	exp := time.Time{}
 	if ttl > 0 {
 		exp = time.Now().Add(ttl)
 	}
-
-	s.data[key] = item{
-		value:      value,
-		expiration: exp,
-	}
+	s.data[key] = item{value: value, expiration: exp}
 	return nil
 }
 
-// Retrieves a value by key
+// Get returns the value and existence flag.
 func (s *Store) Get(key string) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-
-	item, exists := s.data[key]
-	if !exists {
+	it, ok := s.data[key]
+	if !ok || (it.expiration != (time.Time{}) && time.Now().After(it.expiration)) {
 		return "", false
 	}
-
-	if !item.expiration.IsZero() && time.Now().After(item.expiration) {
-		return "", false
-	}
-
-	return item.value, true
+	return it.value, true
 }
 
-// Checks if key exists
+// Exists checks presence without returning value.
 func (s *Store) Exists(key string) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	
-	_, exists := s.data[key]
-	if exists {
-		// Check expiration
-		item := s.data[key]
-		if !item.expiration.IsZero() && time.Now().After(item.expiration) {
-			return false
-		}
-	}
-	return exists
+	_, ok := s.Get(key)
+	return ok
 }
 
-// Removes a key-value pair
+// Delete removes a key.
 func (s *Store) Delete(key string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.data, key)
 }
 
-// Returns all keys
+// GetAllKeys returns every non‑expired key.
 func (s *Store) GetAllKeys() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-
+	now := time.Now()
 	keys := make([]string, 0, len(s.data))
-	for k, item := range s.data {
-		if item.expiration.IsZero() || !time.Now().After(item.expiration) {
+	for k, it := range s.data {
+		if it.expiration.IsZero() || now.Before(it.expiration) {
 			keys = append(keys, k)
 		}
 	}
 	return keys
 }
 
-// Returns keys with prefix
+// GetKeysWithPrefix filters keys by prefix.
 func (s *Store) GetKeysWithPrefix(prefix string) []string {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	var keys []string
-	for k := range s.data {
+	all := s.GetAllKeys()
+	var res []string
+	for _, k := range all {
 		if strings.HasPrefix(k, prefix) {
-			keys = append(keys, k)
+			res = append(res, k)
 		}
 	}
-	return keys
+	return res
 }
 
-// Clears all data
+// Flush clears the store.
 func (s *Store) Flush() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data = make(map[string]item)
 }
 
-// Gets remaining TTL for a key
+// GetTTL returns remaining TTL (‑1 no expiry, ‑2 absent).
 func (s *Store) GetTTL(key string) (time.Duration, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-
-	item, exists := s.data[key]
-	if !exists {
+	it, ok := s.data[key]
+	if !ok {
 		return 0, false
 	}
-
-	if item.expiration.IsZero() {
-		return -1, true // No expiration (permanent)
+	if it.expiration.IsZero() {
+		return -1, true
 	}
-
-	remaining := time.Until(item.expiration)
-	if remaining <= 0 {
-		return 0, false // Expired
+	remaining := time.Until(it.expiration)
+	if remaining < 0 {
+		return 0, false
 	}
-
 	return remaining, true
 }
 
-// Raft will handle this
-// // Runs a background go routine to clean expired keys
+// StartTTLCleaner launches a goroutine to delete expired keys.
 func (s *Store) StartTTLCleaner(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	go func() {
@@ -158,11 +122,10 @@ func (s *Store) StartTTLCleaner(interval time.Duration) {
 func (s *Store) cleanupExpired() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	now := time.Now()
-	for key, item := range s.data {
-		if !item.expiration.IsZero() && now.After(item.expiration) {
-			delete(s.data, key)
+	for k, it := range s.data {
+		if !it.expiration.IsZero() && now.After(it.expiration) {
+			delete(s.data, k)
 		}
 	}
 }

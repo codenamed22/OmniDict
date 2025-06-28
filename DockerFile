@@ -1,22 +1,23 @@
+# Use Go 1.24.4 official image
+FROM golang:1.24.4-alpine
 
-# Use Go 1.24.4 image
-FROM golang:1.24.4
-
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy dependency files first and download Go modules
+# Install git and necessary tools
+RUN apk add --no-cache git bash
+
+# Copy go mod files and download deps first (layered build optimization)
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the rest of the project files
+# Copy entire source
 COPY . .
 
-# Build the Go project (adjust ./cmd if your main.go is elsewhere)
-RUN go build -o server ./cmd
+# Build the CLI binary
+RUN go build -o omnidict main.go
 
-# Expose the port your gRPC server will listen on
-EXPOSE 50051
-
-# Run the built server binary when the container starts
-CMD ["./server"]
+# Set the default command to run the CLI binary
+CMD ["./omnidict"]
+# Expose port 8080 for the CLI (if needed)
+# EXPOSE 8080
