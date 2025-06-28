@@ -22,6 +22,7 @@ type Config struct {
 // Node is a wrapper around Raft with a proposal interface
 type Node struct {
 	Raft *raft.Raft
+	fsm *FSM
 }
 
 // Propose submits a command to the Raft log
@@ -85,4 +86,49 @@ func NewRaftNode(cfg Config, fsm *FSM, logOutput io.Writer) (*Node, error) {
 	// Wrap and return the node
 	return &Node{Raft: r}, nil
 }
+var raftNode *Node // singleton or managed instance
 
+func GetNode() *Node {
+	return raftNode
+}
+
+func (n *Node) GetFSM() *FSM {
+	return n.fsm
+}
+type Command struct {
+	Op    string json:"op"
+	Key   string json:"key"
+	Value []byte json:"value"
+}
+
+func (n *Node) ApplyPut(key string, value []byte) error {
+	cmd := Command{
+		Op:    "put",
+		Key:   key,
+		Value: value,
+	}
+
+	data, err := json.Marshal(cmd)
+	if err != nil {
+		return err
+	}
+
+	// Apply to Raft log — with timeout
+	future := n.raft.Apply(data, 500*time.Millisecond)
+	return future.Error()
+}
+func (n *Node) ApplyUpdate(key string, value []byte) error {
+	cmd := Command{
+		Op:    "update",
+		Key:   key,
+		Value: value,
+	}
+
+	data, err := json.Marshal(cmd)
+	if err != nil {
+		return err
+	}
+
+	f := n.raft.Apply(data, 500*time.Millisecond)
+	return f.Error()
+}

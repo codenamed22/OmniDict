@@ -3,9 +3,9 @@ package cmd
 import (
 	"log"
 
-	"omnidict/client"
-
 	"github.com/spf13/cobra"
+
+	"omnidict/raftstore" // ✅ Changed to use raftstore
 )
 
 var getCmd = &cobra.Command{
@@ -13,12 +13,23 @@ var getCmd = &cobra.Command{
 	Short: "Retrieve a value by key",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		resp, err := client.Get(args[0])
-		if err != nil {
-			log.Fatalf("Get failed: %v", err)
+		key := args[0]
+
+		// ✅ Access the Raft FSM
+		node := raftnode.GetNode()
+		if node == nil {
+			log.Fatal("No Raft node initialized")
 		}
-		if resp.Found {
-			log.Printf("Value: %s", resp.Value)
+
+		fsm := node.GetFSM()
+		if fsm == nil {
+			log.Fatal("FSM not available")
+		}
+
+		// ✅ Get value from FSM
+		value, found := fsm.Get(key)
+		if found {
+			log.Printf("Value: %s", value)
 		} else {
 			log.Println("Key not found")
 		}

@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"sync"
+	"time"
+	"strings"
 
 	raft "github.com/hashicorp/raft"
 )
@@ -19,14 +21,16 @@ type Command struct {
 
 // FSM represents the finite state machine for Raft.
 type FSM struct {
-	mu    sync.Mutex
+	mu    sync.RWMutex
 	store map[string]string
+	expiry map[string]time.Time
 }
 
 // NewFSM creates a new FSM.
 func NewFSM() *FSM {
 	return &FSM{
 		store: make(map[string]string),
+		expiry: make(map[string]time.Time),
 	}
 }
 
@@ -99,4 +103,104 @@ func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
 
 // Release is a no-op for our snapshot.
 func (s *fsmSnapshot) Release() {}
+func (f *FSM) Exists(key string) (bool, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
+	_, ok := f.store[key]
+	return ok, nil
+}
+func (f *FSM) Expire(key string, ttl int64) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	// Sample logic: Add expiry logic in your store
+	// This could be a map[string]time.Time or map[string]int64 with timestamps
+	expiryTime := time.Now().Add(time.Duration(ttl) * time.Second)
+	f.expiry[key] = expiryTime
+
+	return nil
+}
+func (f *FSM) TTL(key string) (int64, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
+	// Does the key exist?
+	_, exists := f.store[key]
+	if !exists {
+		return -2, nil // Key doesn't exist
+	}
+
+	expiry, ok := f.expiry[key]
+	if !ok {
+		return -1, nil // Key has no expiration
+	}
+
+	remaining := int64(time.Until(expiry).Seconds())
+	if remaining <= 0 {
+		return -2, nil // Considered expired
+	}
+
+	return remaining, nil
+}
+func (f *FSM) Flush() error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	// Clear the store and expiry map
+	f.store = make(map[string]string)
+	f.expiry = make(map[string]time.Time)
+
+	return nil
+}
+func (f *FSM) Get(key string) (string, bool) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
+	// Optional: Check if key has expired
+	if expiryTime, ok := f.expiry[key]; ok {
+		if time.Now().After(expiryTime) {
+			// Treat as not found
+			delete(f.store, key)   // Optional cleanup
+			delete(f.expiry, key) // Optional cleanup
+			return "", false
+		}
+	}
+
+	value, ok := f.store[key]
+	return value, ok
+}
+func (f *FSM) Keys(pattern string) ([]string, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
+	now := time.Now()
+	var result []string
+
+	for key := range f.store {
+		// ❌ Skip expired keys
+		if expiryTime, ok := f.expiry[key]; ok {
+			if now.After(expiryTime) {
+				continue
+			}
+		}
+
+		// ✅ Match pattern (simple substring match)
+		if pattern == "" || strings.Contains(key, pattern) {
+			result = append(result, key)
+		}
+	}
+
+	return result, nil
+}
+switch cmd.Op {
+case "put":
+	f.store[cmd.Key] = string(cmd.Value)
+	delete(f.expiry, cmd.Key)
+
+case "update":
+	if _, exists := f.store[cmd.Key]; exists {
+		f.store[cmd.Key] = string(cmd.Value)
+		delete(f.expiry, cmd.Key)
+	}
+}

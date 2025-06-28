@@ -3,9 +3,9 @@ package cmd
 import (
 	"log"
 
-	"omnidict/client"
-
 	"github.com/spf13/cobra"
+
+	"omnidict/raftstore" // ✅ Using raft-aware logic
 )
 
 var updateCmd = &cobra.Command{
@@ -13,11 +13,20 @@ var updateCmd = &cobra.Command{
 	Short: "Update an existing key",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		resp, err := client.Update(args[0], []byte(args[1]))
+		key := args[0]
+		value := []byte(args[1])
+
+		node := raftnode.GetNode()
+		if node == nil {
+			log.Fatal("No Raft node initialized")
+		}
+
+		err := node.ApplyUpdate(key, value)
 		if err != nil {
 			log.Fatalf("Update failed: %v", err)
 		}
-		log.Printf("Update: %v", resp)
+
+		log.Printf("Update successful: %s", key)
 	},
 }
 

@@ -4,9 +4,9 @@ import (
 	"log"
 	"strings"
 
-	"omnidict/client"
-
 	"github.com/spf13/cobra"
+
+	"omnidict/raftstore" // ✅ Replaced client with raftstore
 )
 
 var keysCmd = &cobra.Command{
@@ -18,11 +18,29 @@ var keysCmd = &cobra.Command{
 		if len(args) > 0 {
 			pattern = args[0]
 		}
-		resp, err := client.Keys(pattern)
+
+		// ✅ Access the Raft FSM
+		node := raftnode.GetNode()
+		if node == nil {
+			log.Fatal("No Raft node initialized")
+		}
+
+		fsm := node.GetFSM()
+		if fsm == nil {
+			log.Fatal("FSM not available")
+		}
+
+		// ✅ Get matching keys
+		keys, err := fsm.Keys(pattern)
 		if err != nil {
 			log.Fatalf("Keys failed: %v", err)
 		}
-		log.Printf("Keys: %s", strings.Join(resp.Keys, ", "))
+
+		if len(keys) == 0 {
+			log.Println("No keys found")
+		} else {
+			log.Printf("Keys: %s", strings.Join(keys, ", "))
+		}
 	},
 }
 
