@@ -1,90 +1,79 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net"
 	"os"
 	"time"
 
-	"omnidict/cmd"
 	"omnidict/client"
-	"omnidict/server"
-	"omnidict/store"
-	"omnidict/raftstore"
-	"omnidict/ring"
+	"omnidict/cluster"
+	"omnidict/cmd"
 	pb_kv "omnidict/proto/kv"
 	pb_ring "omnidict/proto/ring"
-	
+	"omnidict/ring"
+	"omnidict/server"
+
 	"google.golang.org/grpc"
-	"github.com/hashicorp/raft"
-	raftboltdb "github.com/hashicorp/raft-boltdb"
 )
 
-/*
-Raft uses rafrPort 8081
-gRPC uses port 8080
-u can use your own ports by passing them as
-./omnidict server --port <> --raft_port <>
-*/
+const numShards = 3
 
 func main() {
 	var (
 		port       = flag.String("port", "8080", "Server port for gRPC")
-		raftPort   = flag.String("raft_port", "8081", "Raft internal port")
+		raftPort   = flag.String("raft_port", "8081", "Base Raft port for shards")
 		serverAddr = flag.String("addr", "localhost:8080", "Server address for CLI")
 		nodeID     = flag.String("id", "node1", "Raft node ID")
 		dataDir    = flag.String("data", "/tmp/raft", "Raft data directory")
+		joinAddr   = flag.String("join", "", "Existing node address to join cluster")
 	)
 	flag.Parse()
 
+	if *joinAddr != "" {
+		conn, err := grpc.Dial(*joinAddr, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("failed to connect to join node: %v", err)
+		}
+		defer conn.Close()
+
+		client := pb_kv.NewOmnidictServiceClient(conn)
+		_, err = client.JoinCluster(context.Background(), &pb_kv.JoinRequest{
+			NodeId:      *nodeID,
+			RaftAddress: net.JoinHostPort("0.0.0.0", *raftPort),
+		})
+		if err != nil {
+			log.Fatalf("failed to join cluster: %v", err)
+		}
+		log.Printf("Node %s joined cluster via %s", *nodeID, *joinAddr)
+	}
+
 	if len(os.Args) > 1 && os.Args[1] == "server" {
-		config := raft.DefaultConfig()
-		config.LocalID = raft.ServerID(*nodeID)
-		os.MkdirAll(*dataDir, 0700)
+		// Initialize shard manager
+		shardMgr := cluster.NewShardManager(*nodeID, *dataDir, *raftPort)
+		shardRafts, shardStores := shardMgr.InitializeShards()
 
-		logStore, err := raftboltdb.NewBoltStore(*dataDir + "/raft-log.bolt")
-		if err != nil {
-			log.Fatalf("failed to create log store: %v", err)
-		}
-		stableStore, err := raftboltdb.NewBoltStore(*dataDir + "/raft-stable.bolt")
-		if err != nil {
-			log.Fatalf("failed to create stable store: %v", err)
+		// Initialize hash ring
+		hashRing := ring.NewHashRing(10)
+		for shardID := range shardRafts {
+			hashRing.AddNode(shardID)
+			log.Printf("Added shard %s to hash ring", shardID)
 		}
 
-		snapshotStore, err := raft.NewFileSnapshotStore(*dataDir, 1, os.Stderr)
-		if err != nil {
-			log.Fatalf("failed to create snapshot store: %v", err)
+		// Start TTL cleaners
+		for shardID, store := range shardStores {
+			store.StartTTLCleaner(5 * time.Minute)
+			log.Printf("Started TTL cleaner for shard %s", shardID)
 		}
 
-		// Use raftPort for Raft transport
-		addr := "127.0.0.1:" + *raftPort
-		transport, err := raft.NewTCPTransport(addr, nil, 3, 10*time.Second, os.Stderr)
-		if err != nil {
-			log.Fatalf("failed to create transport: %v", err)
-		}
-
-		// Create store
-		store := store.NewStore()
-		
-		// Create FSM with store reference
-		fsm := raftstore.NewFSM(store)
-
-		r, err := raft.NewRaft(config, fsm, logStore, stableStore, snapshotStore, transport)
-		if err != nil {
-			log.Fatalf("failed to start Raft node: %v", err)
-		}
-
-		raftConfig := raft.Configuration{
-			Servers: []raft.Server{{
-				ID:      config.LocalID,
-				Address: transport.LocalAddr(),
-			}},
-		}
-		r.BootstrapCluster(raftConfig)
-
-		// Start TTL cleaner
-		store.StartTTLCleaner(5 * time.Minute)
+		// Create ring server
+		ringServer := ring.NewRingServer(
+			10,          // virtual nodes
+			shardStores, // map of shard stores
+			net.JoinHostPort("localhost", *port),
+		)
 
 		// Start gRPC server
 		lis, err := net.Listen("tcp", ":"+*port)
@@ -92,16 +81,17 @@ func main() {
 			log.Fatalf("failed to listen: %v", err)
 		}
 		grpcServer := grpc.NewServer()
-		
-		// Register KV service
-		omniServer := server.NewOmnidictServerWithStorage(store)
+
+		// Register services
+		omniServer := server.NewOmnidictServerWithShards(
+			shardStores,
+			shardRafts,
+			net.JoinHostPort("localhost", *port),
+		)
 		pb_kv.RegisterOmnidictServiceServer(grpcServer, omniServer)
-		
-		// Register Ring service
-		ringServer := ring.NewRingServer(10, 3, store, *port)
 		pb_ring.RegisterRingServiceServer(grpcServer, ringServer)
 
-		log.Printf("Omnidict server started with Raft at %s (gRPC) and %s (Raft)", *port, *raftPort)
+		log.Printf("Server started at %s (gRPC), Raft base port %s", *port, *raftPort)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("gRPC serve failed: %v", err)
 		}

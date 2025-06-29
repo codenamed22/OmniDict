@@ -7,16 +7,19 @@ import (
 	"sync"
 	"time"
 
+	pb_kv "omnidict/proto/kv"
 	"omnidict/store"
 
 	"github.com/hashicorp/raft"
 )
 
 type Command struct {
-	Op    string        `json:"op"`
-	Key   string        `json:"key"`
-	Value string        `json:"value,omitempty"`
-	TTL   time.Duration `json:"ttl,omitempty"`
+	Op    string                `json:"op"`
+	Key   string                `json:"key,omitempty"`
+	Value string                `json:"value,omitempty"`
+	TTL   time.Duration         `json:"ttl,omitempty"`
+	TxnID string                `json:"txn_id,omitempty"`
+	Ops   []*pb_kv.TxnOperation `json:"ops,omitempty"`
 }
 
 type FSM struct {
@@ -42,9 +45,16 @@ func (f *FSM) Apply(l *raft.Log) interface{} {
 
 	switch cmd.Op {
 	case "put":
-		f.store.Put(cmd.Key, cmd.Value, cmd.TTL)
+		ttl := time.Duration(cmd.TTL) * time.Second
+		f.store.Put(cmd.Key, cmd.Value, ttl)
 	case "delete":
 		f.store.Delete(cmd.Key)
+	case "prepare":
+		f.store.StageOperations(cmd.TxnID, cmd.Ops)
+	case "commit":
+		f.store.CommitStagedOperations(cmd.TxnID)
+	case "abort":
+		f.store.ClearStagedOperations(cmd.TxnID)
 	default:
 		log.Println("Unknown command op:", cmd.Op)
 	}
@@ -55,9 +65,9 @@ func (f *FSM) Snapshot() (raft.FSMSnapshot, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	// Create a snapshot by copying all data
 	snap := make(map[string]string)
-	for _, key := range f.store.GetAllKeys() {
+	keys := f.store.GetAllKeys()
+	for _, key := range keys {
 		if value, exists := f.store.Get(key); exists {
 			snap[key] = value
 		}
@@ -67,7 +77,7 @@ func (f *FSM) Snapshot() (raft.FSMSnapshot, error) {
 
 func (f *FSM) Restore(rc io.ReadCloser) error {
 	defer rc.Close()
-	
+
 	snap := make(map[string]string)
 	if err := json.NewDecoder(rc).Decode(&snap); err != nil {
 		return err
@@ -76,12 +86,9 @@ func (f *FSM) Restore(rc io.ReadCloser) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	// Clear existing data
 	f.store.Flush()
-	
-	// Restore from snapshot
 	for key, value := range snap {
-		f.store.Put(key, value, 0) // Permanent storage
+		f.store.Put(key, value, 0)
 	}
 	return nil
 }

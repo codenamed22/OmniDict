@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"omnidict/client"
+
 	"github.com/spf13/cobra"
 )
 
