@@ -21,16 +21,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OmnidictService_Put_FullMethodName         = "/kv.OmnidictService/Put"
-	OmnidictService_Get_FullMethodName         = "/kv.OmnidictService/Get"
-	OmnidictService_Delete_FullMethodName      = "/kv.OmnidictService/Delete"
-	OmnidictService_Update_FullMethodName      = "/kv.OmnidictService/Update"
-	OmnidictService_Exists_FullMethodName      = "/kv.OmnidictService/Exists"
-	OmnidictService_Keys_FullMethodName        = "/kv.OmnidictService/Keys"
-	OmnidictService_Flush_FullMethodName       = "/kv.OmnidictService/Flush"
-	OmnidictService_Expire_FullMethodName      = "/kv.OmnidictService/Expire"
-	OmnidictService_TTL_FullMethodName         = "/kv.OmnidictService/TTL"
-	OmnidictService_GetNodeInfo_FullMethodName = "/kv.OmnidictService/GetNodeInfo"
+	OmnidictService_Put_FullMethodName              = "/kv.OmnidictService/Put"
+	OmnidictService_Get_FullMethodName              = "/kv.OmnidictService/Get"
+	OmnidictService_Delete_FullMethodName           = "/kv.OmnidictService/Delete"
+	OmnidictService_Update_FullMethodName           = "/kv.OmnidictService/Update"
+	OmnidictService_Exists_FullMethodName           = "/kv.OmnidictService/Exists"
+	OmnidictService_Keys_FullMethodName             = "/kv.OmnidictService/Keys"
+	OmnidictService_Flush_FullMethodName            = "/kv.OmnidictService/Flush"
+	OmnidictService_Expire_FullMethodName           = "/kv.OmnidictService/Expire"
+	OmnidictService_TTL_FullMethodName              = "/kv.OmnidictService/TTL"
+	OmnidictService_GetNodeInfo_FullMethodName      = "/kv.OmnidictService/GetNodeInfo"
+	OmnidictService_JoinCluster_FullMethodName      = "/kv.OmnidictService/JoinCluster"
+	OmnidictService_RemoveNode_FullMethodName       = "/kv.OmnidictService/RemoveNode"
+	OmnidictService_BeginTransaction_FullMethodName = "/kv.OmnidictService/BeginTransaction"
+	OmnidictService_Prepare_FullMethodName          = "/kv.OmnidictService/Prepare"
+	OmnidictService_Commit_FullMethodName           = "/kv.OmnidictService/Commit"
+	OmnidictService_Abort_FullMethodName            = "/kv.OmnidictService/Abort"
 )
 
 // OmnidictServiceClient is the client API for OmnidictService service.
@@ -53,6 +59,13 @@ type OmnidictServiceClient interface {
 	TTL(ctx context.Context, in *TTLRequest, opts ...grpc.CallOption) (*TTLResponse, error)
 	// Node information
 	GetNodeInfo(ctx context.Context, in *NodeInfoRequest, opts ...grpc.CallOption) (*NodeInfoResponse, error)
+	JoinCluster(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error)
+	RemoveNode(ctx context.Context, in *RemoveNodeRequest, opts ...grpc.CallOption) (*RemoveNodeResponse, error)
+	// Transaction operations
+	BeginTransaction(ctx context.Context, in *BeginTxnRequest, opts ...grpc.CallOption) (*BeginTxnResponse, error)
+	Prepare(ctx context.Context, in *PrepareRequest, opts ...grpc.CallOption) (*PrepareResponse, error)
+	Commit(ctx context.Context, in *CommitRequest, opts ...grpc.CallOption) (*CommitResponse, error)
+	Abort(ctx context.Context, in *AbortRequest, opts ...grpc.CallOption) (*AbortResponse, error)
 }
 
 type omnidictServiceClient struct {
@@ -163,6 +176,66 @@ func (c *omnidictServiceClient) GetNodeInfo(ctx context.Context, in *NodeInfoReq
 	return out, nil
 }
 
+func (c *omnidictServiceClient) JoinCluster(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(JoinResponse)
+	err := c.cc.Invoke(ctx, OmnidictService_JoinCluster_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *omnidictServiceClient) RemoveNode(ctx context.Context, in *RemoveNodeRequest, opts ...grpc.CallOption) (*RemoveNodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RemoveNodeResponse)
+	err := c.cc.Invoke(ctx, OmnidictService_RemoveNode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *omnidictServiceClient) BeginTransaction(ctx context.Context, in *BeginTxnRequest, opts ...grpc.CallOption) (*BeginTxnResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BeginTxnResponse)
+	err := c.cc.Invoke(ctx, OmnidictService_BeginTransaction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *omnidictServiceClient) Prepare(ctx context.Context, in *PrepareRequest, opts ...grpc.CallOption) (*PrepareResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PrepareResponse)
+	err := c.cc.Invoke(ctx, OmnidictService_Prepare_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *omnidictServiceClient) Commit(ctx context.Context, in *CommitRequest, opts ...grpc.CallOption) (*CommitResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommitResponse)
+	err := c.cc.Invoke(ctx, OmnidictService_Commit_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *omnidictServiceClient) Abort(ctx context.Context, in *AbortRequest, opts ...grpc.CallOption) (*AbortResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AbortResponse)
+	err := c.cc.Invoke(ctx, OmnidictService_Abort_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OmnidictServiceServer is the server API for OmnidictService service.
 // All implementations must embed UnimplementedOmnidictServiceServer
 // for forward compatibility.
@@ -183,6 +256,13 @@ type OmnidictServiceServer interface {
 	TTL(context.Context, *TTLRequest) (*TTLResponse, error)
 	// Node information
 	GetNodeInfo(context.Context, *NodeInfoRequest) (*NodeInfoResponse, error)
+	JoinCluster(context.Context, *JoinRequest) (*JoinResponse, error)
+	RemoveNode(context.Context, *RemoveNodeRequest) (*RemoveNodeResponse, error)
+	// Transaction operations
+	BeginTransaction(context.Context, *BeginTxnRequest) (*BeginTxnResponse, error)
+	Prepare(context.Context, *PrepareRequest) (*PrepareResponse, error)
+	Commit(context.Context, *CommitRequest) (*CommitResponse, error)
+	Abort(context.Context, *AbortRequest) (*AbortResponse, error)
 	mustEmbedUnimplementedOmnidictServiceServer()
 }
 
@@ -222,6 +302,24 @@ func (UnimplementedOmnidictServiceServer) TTL(context.Context, *TTLRequest) (*TT
 }
 func (UnimplementedOmnidictServiceServer) GetNodeInfo(context.Context, *NodeInfoRequest) (*NodeInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNodeInfo not implemented")
+}
+func (UnimplementedOmnidictServiceServer) JoinCluster(context.Context, *JoinRequest) (*JoinResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinCluster not implemented")
+}
+func (UnimplementedOmnidictServiceServer) RemoveNode(context.Context, *RemoveNodeRequest) (*RemoveNodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveNode not implemented")
+}
+func (UnimplementedOmnidictServiceServer) BeginTransaction(context.Context, *BeginTxnRequest) (*BeginTxnResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BeginTransaction not implemented")
+}
+func (UnimplementedOmnidictServiceServer) Prepare(context.Context, *PrepareRequest) (*PrepareResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Prepare not implemented")
+}
+func (UnimplementedOmnidictServiceServer) Commit(context.Context, *CommitRequest) (*CommitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Commit not implemented")
+}
+func (UnimplementedOmnidictServiceServer) Abort(context.Context, *AbortRequest) (*AbortResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Abort not implemented")
 }
 func (UnimplementedOmnidictServiceServer) mustEmbedUnimplementedOmnidictServiceServer() {}
 func (UnimplementedOmnidictServiceServer) testEmbeddedByValue()                         {}
@@ -424,6 +522,114 @@ func _OmnidictService_GetNodeInfo_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OmnidictService_JoinCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OmnidictServiceServer).JoinCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OmnidictService_JoinCluster_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OmnidictServiceServer).JoinCluster(ctx, req.(*JoinRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OmnidictService_RemoveNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveNodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OmnidictServiceServer).RemoveNode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OmnidictService_RemoveNode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OmnidictServiceServer).RemoveNode(ctx, req.(*RemoveNodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OmnidictService_BeginTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BeginTxnRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OmnidictServiceServer).BeginTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OmnidictService_BeginTransaction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OmnidictServiceServer).BeginTransaction(ctx, req.(*BeginTxnRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OmnidictService_Prepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OmnidictServiceServer).Prepare(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OmnidictService_Prepare_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OmnidictServiceServer).Prepare(ctx, req.(*PrepareRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OmnidictService_Commit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OmnidictServiceServer).Commit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OmnidictService_Commit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OmnidictServiceServer).Commit(ctx, req.(*CommitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OmnidictService_Abort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AbortRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OmnidictServiceServer).Abort(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OmnidictService_Abort_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OmnidictServiceServer).Abort(ctx, req.(*AbortRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OmnidictService_ServiceDesc is the grpc.ServiceDesc for OmnidictService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -470,6 +676,30 @@ var OmnidictService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetNodeInfo",
 			Handler:    _OmnidictService_GetNodeInfo_Handler,
+		},
+		{
+			MethodName: "JoinCluster",
+			Handler:    _OmnidictService_JoinCluster_Handler,
+		},
+		{
+			MethodName: "RemoveNode",
+			Handler:    _OmnidictService_RemoveNode_Handler,
+		},
+		{
+			MethodName: "BeginTransaction",
+			Handler:    _OmnidictService_BeginTransaction_Handler,
+		},
+		{
+			MethodName: "Prepare",
+			Handler:    _OmnidictService_Prepare_Handler,
+		},
+		{
+			MethodName: "Commit",
+			Handler:    _OmnidictService_Commit_Handler,
+		},
+		{
+			MethodName: "Abort",
+			Handler:    _OmnidictService_Abort_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
