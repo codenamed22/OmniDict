@@ -7,11 +7,12 @@ import (
 	"log"
 	"net"
 	"os"
-	"time"
 
 	"omnidict/client"
 	"omnidict/cluster"
 	"omnidict/cmd"
+	"omnidict/gossip"
+	pb_gossip "omnidict/proto/gossip"
 	pb_kv "omnidict/proto/kv"
 	pb_ring "omnidict/proto/ring"
 	"omnidict/ring"
@@ -73,55 +74,47 @@ func joinCluster(joinAddr, nodeID, raftPort string) error {
 }
 
 func runServer(port, raftPort, nodeID, dataDir string) error {
+	// Initialize gossip manager
+	gossipMgr := gossip.NewGossipManager(nodeID, []string{})
+	gossipMgr.AddMember(nodeID) // Add self to membership
+	gossipMgr.Start()
+
 	// Initialize shard manager
 	shardMgr := cluster.NewShardManager(nodeID, dataDir, raftPort)
 	shardRafts, shardStores, err := shardMgr.InitializeShards()
 	if err != nil {
-		return fmt.Errorf("failed to initialize shards: %w", err)
+		return fmt.Errorf("failed to initialize shards: %v", err)
 	}
 
-	// Initialize hash ring
-	hashRing := ring.NewHashRing(10)
-	for shardID := range shardRafts {
-		hashRing.AddNode(shardID)
-		log.Printf("Added shard %s to hash ring", shardID)
-	}
-
-	// Start TTL cleaners
-	for shardID, store := range shardStores {
-		store.StartTTLCleaner(5 * time.Minute)
-		log.Printf("Started TTL cleaner for shard %s", shardID)
-	}
-
-	// Create ring server
-	ringServer := ring.NewRingServer(
-		10,          // virtual nodes
-		shardStores, // map of shard stores
-		net.JoinHostPort("localhost", port),
-	)
-
-	// Start gRPC server
-	lis, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		return fmt.Errorf("failed to listen on port %s: %w", port, err)
-	}
-
-	grpcServer := grpc.NewServer()
-
-	// Register services
+	// Create server
 	omniServer := server.NewOmnidictServerWithShards(
 		shardStores,
 		shardRafts,
-		net.JoinHostPort("localhost", port),
+		fmt.Sprintf(":%s", port),
+		gossipMgr,
 	)
+
+	// Initialize ring server
+	ringServer := ring.NewRingServer(3, shardStores, nodeID)
+
+	// Start gRPC server
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	if err != nil {
+		return fmt.Errorf("failed to listen: %v", err)
+	}
+	defer lis.Close()
+
+	// Register services
+	gossipServer := gossip.NewGossipServer(gossipMgr)
+	grpcServer := grpc.NewServer()
 	pb_kv.RegisterOmnidictServiceServer(grpcServer, omniServer)
 	pb_ring.RegisterRingServiceServer(grpcServer, ringServer)
+	pb_gossip.RegisterGossipServiceServer(grpcServer, gossipServer)
 
-	log.Printf("Server started at %s (gRPC), Raft base port %s", port, raftPort)
+	log.Printf("Server started on port %s", port)
 	if err := grpcServer.Serve(lis); err != nil {
-		return fmt.Errorf("gRPC serve failed: %w", err)
+		return fmt.Errorf("failed to serve: %v", err)
 	}
-
 	return nil
 }
 

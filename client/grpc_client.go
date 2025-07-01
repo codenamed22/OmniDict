@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// Global connection and client
+	// Global connection and client - change to struct / dependency injection (idk what that is lol T-T)
 	Conn     *grpc.ClientConn
 	KvClient pb_kv.OmnidictServiceClient
 )

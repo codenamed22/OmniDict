@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package gossip;
+
+option go_package = "./gossip";
+
+service GossipService {
+  rpc Gossip(GossipMessage) returns (GossipAck);
+}
+
+message GossipMessage {
+  string node_id = 1;
+  repeated string members = 2;
+  int64 timestamp = 3;
+}
+
+message GossipAck {
+  bool success = 1;
+}

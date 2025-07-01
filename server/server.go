@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"omnidict/gossip"
 	pb_kv "omnidict/proto/kv"
 	"omnidict/ring"
 	"omnidict/store"
@@ -26,6 +27,7 @@ type OmnidictServer struct {
 	ShardStores    map[string]*store.Store
 	ShardRafts     map[string]*raft.Raft
 	NodeAddress    string
+	GossipManager  *gossip.GossipManager
 	txnCoordinator *TransactionCoordinator
 }
 
@@ -33,6 +35,7 @@ func NewOmnidictServerWithShards(
 	shardStores map[string]*store.Store,
 	shardRafts map[string]*raft.Raft,
 	nodeAddress string,
+	gossipManager *gossip.GossipManager,
 ) *OmnidictServer {
 	hashRing := ring.NewHashRing(3)
 	for i := 0; i < 3; i++ {
@@ -45,6 +48,7 @@ func NewOmnidictServerWithShards(
 		ShardStores:    shardStores,
 		ShardRafts:     shardRafts,
 		NodeAddress:    nodeAddress,
+		GossipManager:  gossipManager,
 		txnCoordinator: NewTransactionCoordinator(shardRafts, shardStores),
 	}
 }
@@ -327,6 +331,19 @@ func (s *OmnidictServer) JoinCluster(
 			Error:   strings.Join(errorMsgs, "; "),
 		}, nil
 	}
+
+	// Add new node to gossip
+	host, _, err := net.SplitHostPort(req.RaftAddress)
+	if err == nil {
+		grpcAddr := net.JoinHostPort(host, "8080")
+		s.GossipManager.AddPeer(grpcAddr)
+	} else {
+		log.Printf("Failed to parse raft address: %v", err)
+	}
+
+	// Update membership with new node
+	s.GossipManager.AddMember(req.NodeId)
+
 	return &pb_kv.JoinResponse{Success: true}, nil
 }
 
