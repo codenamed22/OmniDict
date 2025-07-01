@@ -76,7 +76,7 @@ func Update(key string, value []byte) (*pb_kv.UpdateResponse, error) {
 	})
 }
 
-// Transaction Handling
+// Transaction Handling - move this later to a separate file
 type Transaction struct {
 	ID  string
 	Ops []*pb_kv.TxnOperation

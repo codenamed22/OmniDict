@@ -4,7 +4,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.12.4
-// source: kv.proto
+// source: proto/kv.proto
 
 package kv
 
@@ -703,5 +703,5 @@ var OmnidictService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "kv.proto",
+	Metadata: "proto/kv.proto",
 }

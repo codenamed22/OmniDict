@@ -1,3 +1,5 @@
+//protoc --go_out=./proto --go-grpc_out=./proto proto/ring.proto - for regerenerating Go code
+
 syntax = "proto3";
 
 package ring;
