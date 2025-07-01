@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"omnidict/client"
@@ -12,12 +13,13 @@ var putCmd = &cobra.Command{
 	Use:   "put [key] [value]",
 	Short: "Store a key-value pair",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		resp, err := client.Put(args[0], []byte(args[1]))
 		if err != nil {
-			log.Fatalf("Put failed: %v", err)
+			return fmt.Errorf("put failed: %w", err)
 		}
 		log.Printf("Put: %v", resp)
+		return nil
 	},
 }
 

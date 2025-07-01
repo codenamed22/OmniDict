@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"omnidict/client"
@@ -12,12 +13,12 @@ var ttlCmd = &cobra.Command{
 	Use:   "ttl [key]",
 	Short: "Get time to live for a key",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		resp, err := client.TTL(args[0])  
+	RunE: func(cmd *cobra.Command, args []string) error {
+		resp, err := client.TTL(args[0])
 		if err != nil {
-			log.Fatalf("TTL failed: %v", err)
+			return fmt.Errorf("ttl failed: %w", err)
 		}
-		
+
 		switch resp.Ttl {
 		case -2:
 			log.Println("Key does not exist")
@@ -26,6 +27,7 @@ var ttlCmd = &cobra.Command{
 		default:
 			log.Printf("TTL: %d seconds", resp.Ttl)
 		}
+		return nil
 	},
 }
 

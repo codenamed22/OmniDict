@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"omnidict/client"
@@ -12,12 +13,13 @@ var updateCmd = &cobra.Command{
 	Use:   "update [key] [value]",
 	Short: "Update an existing key",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		resp, err := client.Update(args[0], []byte(args[1]))
 		if err != nil {
-			log.Fatalf("Update failed: %v", err)
+			return fmt.Errorf("update failed: %w", err)
 		}
 		log.Printf("Update: %v", resp)
+		return nil
 	},
 }
 

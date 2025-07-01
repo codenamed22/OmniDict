@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -13,16 +14,17 @@ var keysCmd = &cobra.Command{
 	Use:   "keys [pattern]",
 	Short: "List keys matching pattern",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		pattern := ""
 		if len(args) > 0 {
 			pattern = args[0]
 		}
 		resp, err := client.Keys(pattern)
 		if err != nil {
-			log.Fatalf("Keys failed: %v", err)
+			return fmt.Errorf("keys failed: %w", err)
 		}
 		log.Printf("Keys: %s", strings.Join(resp.Keys, ", "))
+		return nil
 	},
 }
 
