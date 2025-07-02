@@ -8,6 +8,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"omnidict/gossip"
@@ -15,6 +16,7 @@ import (
 	"omnidict/ring"
 	"omnidict/store"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/raft"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -23,12 +25,19 @@ import (
 
 type OmnidictServer struct {
 	pb_kv.UnimplementedOmnidictServiceServer
-	Ring           *ring.HashRing
-	ShardStores    map[string]*store.Store
-	ShardRafts     map[string]*raft.Raft
-	NodeAddress    string
-	GossipManager  *gossip.GossipManager
-	txnCoordinator *TransactionCoordinator
+	Ring          *ring.HashRing
+	ShardStores   map[string]*store.Store
+	ShardRafts    map[string]*raft.Raft
+	NodeAddress   string
+	GossipManager *gossip.GossipManager
+	transactions  map[string]*TransactionState
+	txnMu         sync.RWMutex
+}
+
+type TransactionState struct {
+	ID         string
+	Operations []*pb_kv.TxnOperation
+	Prepared   bool
 }
 
 func NewOmnidictServerWithShards(
@@ -44,12 +53,12 @@ func NewOmnidictServerWithShards(
 	}
 
 	return &OmnidictServer{
-		Ring:           hashRing,
-		ShardStores:    shardStores,
-		ShardRafts:     shardRafts,
-		NodeAddress:    nodeAddress,
-		GossipManager:  gossipManager,
-		txnCoordinator: NewTransactionCoordinator(shardRafts, shardStores),
+		Ring:          hashRing,
+		ShardStores:   shardStores,
+		ShardRafts:    shardRafts,
+		NodeAddress:   nodeAddress,
+		GossipManager: gossipManager,
+		transactions:  make(map[string]*TransactionState),
 	}
 }
 
@@ -410,18 +419,66 @@ func (s *OmnidictServer) GetNodeInfo(ctx context.Context, req *pb_kv.NodeInfoReq
 	}, nil
 }
 
+func generateTxnID() string {
+	return uuid.New().String()
+}
+
 func (s *OmnidictServer) BeginTransaction(ctx context.Context, req *pb_kv.BeginTxnRequest) (*pb_kv.BeginTxnResponse, error) {
-	return s.txnCoordinator.BeginTransaction(ctx, req)
+	txnID := generateTxnID() // Implement UUID generation
+	s.txnMu.Lock()
+	defer s.txnMu.Unlock()
+	s.transactions[txnID] = &TransactionState{ID: txnID}
+	return &pb_kv.BeginTxnResponse{TxnId: txnID}, nil
 }
 
 func (s *OmnidictServer) Prepare(ctx context.Context, req *pb_kv.PrepareRequest) (*pb_kv.PrepareResponse, error) {
-	return s.txnCoordinator.Prepare(ctx, req)
+	s.txnMu.Lock()
+	defer s.txnMu.Unlock()
+
+	txn, exists := s.transactions[req.TxnId]
+	if !exists {
+		return nil, status.Errorf(codes.NotFound, "transaction not found")
+	}
+
+	txn.Operations = req.Operations
+	txn.Prepared = true
+	return &pb_kv.PrepareResponse{Success: true}, nil
 }
 
 func (s *OmnidictServer) Commit(ctx context.Context, req *pb_kv.CommitRequest) (*pb_kv.CommitResponse, error) {
-	return s.txnCoordinator.Commit(ctx, req)
+	s.txnMu.Lock()
+	defer s.txnMu.Unlock()
+
+	txn, exists := s.transactions[req.TxnId]
+	if !exists || !txn.Prepared {
+		return nil, status.Errorf(codes.FailedPrecondition, "transaction not prepared")
+	}
+
+	for _, op := range txn.Operations {
+		shardID := s.Ring.GetShardID(op.Key)
+		store := s.ShardStores[shardID]
+
+		switch op.Op {
+		case pb_kv.TxnOperation_SET:
+			ttl := time.Duration(op.Ttl) * time.Second
+			store.Put(op.Key, op.Value, ttl)
+		case pb_kv.TxnOperation_DELETE:
+			store.Delete(op.Key)
+		}
+	}
+
+	delete(s.transactions, req.TxnId)
+	return &pb_kv.CommitResponse{Success: true}, nil
 }
 
 func (s *OmnidictServer) Abort(ctx context.Context, req *pb_kv.AbortRequest) (*pb_kv.AbortResponse, error) {
-	return s.txnCoordinator.Abort(ctx, req)
+	s.txnMu.Lock()
+	defer s.txnMu.Unlock()
+
+	if _, exists := s.transactions[req.TxnId]; !exists {
+		return nil, status.Errorf(codes.NotFound, "transaction not found")
+	}
+
+	delete(s.transactions, req.TxnId)
+	return &pb_kv.AbortResponse{Success: true}, nil
 }

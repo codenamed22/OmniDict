@@ -170,6 +170,7 @@ message TxnOperation {
       DELETE = 1;
     }
   TxnOp op = 3;
+  int64 ttl = 4;
 }
 
 message PrepareRequest {

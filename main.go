@@ -29,7 +29,7 @@ func main() {
 		raftPort   = flag.String("raft_port", "8081", "Base Raft port for shards")
 		serverAddr = flag.String("addr", "localhost:8080", "Server address for CLI")
 		nodeID     = flag.String("id", "node1", "Raft node ID")
-		dataDir    = flag.String("data", "/tmp/raft", "Raft data directory")
+		dataDir    = flag.String("data", "../data", "Raft data directory")
 		joinAddr   = flag.String("join", "", "Existing node address to join cluster")
 	)
 	flag.Parse()

@@ -1340,6 +1340,7 @@ type TxnOperation struct {
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	Op            TxnOperation_TxnOp     `protobuf:"varint,3,opt,name=op,proto3,enum=kv.TxnOperation_TxnOp" json:"op,omitempty"`
+	Ttl           int64                  `protobuf:"varint,4,opt,name=ttl,proto3" json:"ttl,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1393,6 +1394,13 @@ func (x *TxnOperation) GetOp() TxnOperation_TxnOp {
 		return x.Op
 	}
 	return TxnOperation_SET
+}
+
+func (x *TxnOperation) GetTtl() int64 {
+	if x != nil {
+		return x.Ttl
+	}
+	return 0
 }
 
 type PrepareRequest struct {
@@ -1741,11 +1749,12 @@ const file_proto_kv_proto_rawDesc = "" +
 	"\x05error\x18\x02 \x01(\tR\x05error\"\x11\n" +
 	"\x0fBeginTxnRequest\")\n" +
 	"\x10BeginTxnResponse\x12\x15\n" +
-	"\x06txn_id\x18\x01 \x01(\tR\x05txnId\"|\n" +
+	"\x06txn_id\x18\x01 \x01(\tR\x05txnId\"\x8e\x01\n" +
 	"\fTxnOperation\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value\x12&\n" +
-	"\x02op\x18\x03 \x01(\x0e2\x16.kv.TxnOperation.TxnOpR\x02op\"\x1c\n" +
+	"\x02op\x18\x03 \x01(\x0e2\x16.kv.TxnOperation.TxnOpR\x02op\x12\x10\n" +
+	"\x03ttl\x18\x04 \x01(\x03R\x03ttl\"\x1c\n" +
 	"\x05TxnOp\x12\a\n" +
 	"\x03SET\x10\x00\x12\n" +
 	"\n" +

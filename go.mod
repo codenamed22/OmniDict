@@ -3,6 +3,7 @@ module omnidict
 go 1.24.4
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/raft v1.7.3
 	github.com/hashicorp/raft-boltdb v0.0.0-20250616090010-b0f3b5d9e479
 	github.com/spf13/cobra v1.9.1
