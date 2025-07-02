@@ -1,4 +1,4 @@
-// protoc --go_out=. --go-grpc_out=. kv.proto - for regerenerating Go code - go to proto directory
+// protoc --go_out=./proto --go-grpc_out=./proto proto/kv.proto - for regerenerating Go code
 syntax = "proto3";
 
 package kv;
@@ -24,6 +24,14 @@ service OmnidictService {
   
   // Node information
   rpc GetNodeInfo(NodeInfoRequest) returns (NodeInfoResponse);
+  rpc JoinCluster(JoinRequest) returns (JoinResponse);
+  rpc RemoveNode(RemoveNodeRequest) returns (RemoveNodeResponse);
+  
+  // Transaction operations
+  rpc BeginTransaction(BeginTxnRequest) returns (BeginTxnResponse);
+  rpc Prepare(PrepareRequest) returns (PrepareResponse);
+  rpc Commit(CommitRequest) returns (CommitResponse);
+  rpc Abort(AbortRequest) returns (AbortResponse);
 }
 
 // Put operation messages
@@ -128,4 +136,63 @@ message NodeInfoResponse {
   string status = 3;
   int32 total_nodes = 4;
   repeated string nodes = 5;
+}
+
+message JoinRequest {
+  string node_id = 1;
+  string raft_address = 2;
+}
+
+message JoinResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message RemoveNodeRequest {
+  string node_id = 1;
+}
+
+message RemoveNodeResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message BeginTxnRequest {}
+message BeginTxnResponse {
+  string txn_id = 1;
+}
+
+message TxnOperation {
+  string key = 1;
+  string value = 2;
+  enum TxnOp {
+      SET = 0;
+      DELETE = 1;
+    }
+  TxnOp op = 3;
+}
+
+message PrepareRequest {
+  string txn_id = 1;
+  repeated TxnOperation operations = 2;
+}
+
+message PrepareResponse {
+  bool success = 1;
+}
+
+message CommitRequest {
+  string txn_id = 1;
+}
+
+message CommitResponse {
+  bool success = 1;
+}
+
+message AbortRequest {
+  string txn_id = 1;
+}
+
+message AbortResponse {
+  bool success = 1;
 }

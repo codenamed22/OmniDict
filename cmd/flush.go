@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"omnidict/client"
@@ -12,12 +13,13 @@ var flushCmd = &cobra.Command{
 	Use:   "flush",
 	Short: "Clear all keys",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		resp, err := client.Flush()
 		if err != nil {
-			log.Fatalf("Flush failed: %v", err)
+			return fmt.Errorf("flush failed: %w", err)
 		}
 		log.Printf("Flush: %v", resp)
+		return nil
 	},
 }
 

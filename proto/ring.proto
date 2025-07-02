@@ -1,4 +1,5 @@
-// protoc --go_out=. --go-grpc_out=. ring.proto - for regerenerating Go code - go to proto directory
+//protoc --go_out=./proto --go-grpc_out=./proto proto/ring.proto - for regerenerating Go code
+
 syntax = "proto3";
 
 package ring;
@@ -6,59 +7,61 @@ package ring;
 option go_package = "./ring";
 
 service RingService {
-  rpc GetNodeForRequest(NodeRequest) returns (NodeResponse);
-  rpc AddNodeForRequest(NodeRequest) returns (Empty);
-  rpc RemoveNodeForRequest(NodeRequest) returns (Empty);
-  rpc Put(PutRequest) returns (PutResponse);
-  rpc Get(GetRequest) returns (GetResponse);
-  rpc Delete(DeleteRequest) returns (DeleteResponse);
-  rpc HealthCheck(HealthRequest) returns (HealthResponse);
-}
-
-message NodeRequest {
-  string key = 1;
-  string node = 2;
-  string address = 3;
-}
-
-message NodeResponse {
-  string node = 1;
+    rpc Put(PutRequest) returns (PutResponse);
+    rpc Get(GetRequest) returns (GetResponse);
+    rpc Delete(DeleteRequest) returns (DeleteResponse);
+    rpc AddNode(AddNodeRequest) returns (AddNodeResponse);
+    rpc RemoveNode(RemoveNodeRequest) returns (RemoveNodeResponse);
+    rpc GetShard(GetShardRequest) returns (GetShardResponse);
 }
 
 message PutRequest {
-  string key = 1;
-  bytes value = 2;
-  int64 ttl = 3;
+    string key = 1;
+    bytes value = 2;
+    int64 ttl = 3;
 }
 
 message PutResponse {
-  bool success = 1;
+    bool success = 1;
 }
 
 message GetRequest {
-  string key = 1;
+    string key = 1;
 }
 
 message GetResponse {
-  bytes value = 1;
+    bool found = 1;
+    string value = 2;
 }
 
 message DeleteRequest {
-  string key = 1;
+    string key = 1;
 }
 
 message DeleteResponse {
-  bool success = 1;
+    bool success = 1;
 }
 
-message Empty {}
-
-
-message HealthResponse {
-  bool healthy = 1;
-  string status = 2;
+message AddNodeRequest {
+    string node_id = 1;
 }
 
-message HealthRequest {
-  string node = 1;
+message AddNodeResponse {
+    bool success = 1;
+}
+
+message RemoveNodeRequest {
+    string node_id = 1;
+}
+
+message RemoveNodeResponse {
+    bool success = 1;
+}
+
+message GetShardRequest {
+    string key = 1;
+}
+
+message GetShardResponse {
+    string shard_id = 1;
 }

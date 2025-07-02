@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"omnidict/client"
@@ -12,12 +13,13 @@ var existsCmd = &cobra.Command{
 	Use:   "exists [key]",
 	Short: "Check if key exists",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		resp, err := client.Exists(args[0])
 		if err != nil {
-			log.Fatalf("Exists failed: %v", err)
+			return fmt.Errorf("exists failed: %w", err)
 		}
 		log.Printf("Exists: %v", resp.Exists)
+		return nil
 	},
 }
 

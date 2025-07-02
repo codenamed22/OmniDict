@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"omnidict/client"
+
 	"github.com/spf13/cobra"
 )
 
@@ -11,12 +13,13 @@ var deleteCmd = &cobra.Command{
 	Use:   "delete [key]",
 	Short: "Delete a key-value pair",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		resp, err := client.Delete(args[0])
 		if err != nil {
-			log.Fatalf("Delete failed: %v", err)
+			return fmt.Errorf("delete failed: %w", err)
 		}
 		log.Printf("Delete: %v", resp)
+		return nil
 	},
 }
 

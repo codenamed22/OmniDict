@@ -2,76 +2,127 @@ package client
 
 import (
 	"context"
-	"log"
+
+	pb_kv "omnidict/proto/kv"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	pb_kv "omnidict/proto/kv"
 )
 
-var Conn *grpc.ClientConn
+var (
+	// Global connection and client
+	Conn     *grpc.ClientConn
+	KvClient pb_kv.OmnidictServiceClient
+)
 
-func InitGRPCClient(endpoint string) {
+func InitGRPCClient(addr string) error {
 	var err error
-	Conn, err = grpc.Dial(
-		endpoint,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	Conn, err = grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("Failed to connect: %v", err)
+		return err
+	}
+	KvClient = pb_kv.NewOmnidictServiceClient(Conn)
+	return nil
+}
+
+func Close() {
+	if Conn != nil {
+		Conn.Close()
 	}
 }
 
+// Key-Value Operations
 func Put(key string, value []byte) (*pb_kv.PutResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn) // Fixed service name
-	return client.Put(context.Background(), &pb_kv.PutRequest{
+	return KvClient.Put(context.Background(), &pb_kv.PutRequest{
 		Key:   key,
 		Value: string(value),
 	})
 }
 
 func Get(key string) (*pb_kv.GetResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn)
-	return client.Get(context.Background(), &pb_kv.GetRequest{Key: key})
+	return KvClient.Get(context.Background(), &pb_kv.GetRequest{Key: key})
 }
 
 func Delete(key string) (*pb_kv.DeleteResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn)
-	return client.Delete(context.Background(), &pb_kv.DeleteRequest{Key: key})
+	return KvClient.Delete(context.Background(), &pb_kv.DeleteRequest{Key: key})
 }
 
 func Exists(key string) (*pb_kv.ExistsResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn)
-	return client.Exists(context.Background(), &pb_kv.ExistsRequest{Key: key})
+	return KvClient.Exists(context.Background(), &pb_kv.ExistsRequest{Key: key})
 }
 
 func Expire(key string, ttl int64) (*pb_kv.ExpireResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn)
-	return client.Expire(context.Background(), &pb_kv.ExpireRequest{
+	return KvClient.Expire(context.Background(), &pb_kv.ExpireRequest{
 		Key: key,
 		Ttl: ttl,
 	})
 }
 
 func Flush() (*pb_kv.FlushResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn)
-	return client.Flush(context.Background(), &pb_kv.FlushRequest{})
+	return KvClient.Flush(context.Background(), &pb_kv.FlushRequest{})
 }
 
 func Keys(pattern string) (*pb_kv.KeysResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn)
-	return client.Keys(context.Background(), &pb_kv.KeysRequest{Pattern: pattern})
+	return KvClient.Keys(context.Background(), &pb_kv.KeysRequest{Pattern: pattern})
 }
 
 func TTL(key string) (*pb_kv.TTLResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn)
-	return client.TTL(context.Background(), &pb_kv.TTLRequest{Key: key})
+	return KvClient.TTL(context.Background(), &pb_kv.TTLRequest{Key: key})
 }
 
 func Update(key string, value []byte) (*pb_kv.UpdateResponse, error) {
-	client := pb_kv.NewOmnidictServiceClient(Conn)
-	return client.Update(context.Background(), &pb_kv.UpdateRequest{
+	return KvClient.Update(context.Background(), &pb_kv.UpdateRequest{
 		Key:   key,
 		Value: string(value),
 	})
+}
+
+// Transaction Handling - move this later to a separate file
+type Transaction struct {
+	ID  string
+	Ops []*pb_kv.TxnOperation
+}
+
+func BeginTransaction() (*Transaction, error) {
+	resp, err := KvClient.BeginTransaction(context.Background(), &pb_kv.BeginTxnRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return &Transaction{ID: resp.TxnId}, nil
+}
+
+func (t *Transaction) AddOperation(opType pb_kv.TxnOperation_TxnOp, key, value string) {
+	t.Ops = append(t.Ops, &pb_kv.TxnOperation{
+		Key:   key,
+		Value: value,
+		Op:    opType,
+	})
+}
+
+func (t *Transaction) Put(key, value string) {
+	t.AddOperation(pb_kv.TxnOperation_SET, key, value)
+}
+
+func (t *Transaction) Delete(key string) {
+	t.AddOperation(pb_kv.TxnOperation_DELETE, key, "")
+}
+
+func (t *Transaction) Commit() error {
+	// Prepare phase
+	_, err := KvClient.Prepare(context.Background(), &pb_kv.PrepareRequest{
+		TxnId:      t.ID,
+		Operations: t.Ops,
+	})
+	if err != nil {
+		t.Abort()
+		return err
+	}
+
+	// Commit phase
+	_, err = KvClient.Commit(context.Background(), &pb_kv.CommitRequest{TxnId: t.ID})
+	return err
+}
+
+func (t *Transaction) Abort() error {
+	_, err := KvClient.Abort(context.Background(), &pb_kv.AbortRequest{TxnId: t.ID})
+	return err
 }
