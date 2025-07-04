@@ -1,36 +1,198 @@
+// protoc --go_out=./proto --go-grpc_out=./proto proto/kv.proto - for regerenerating Go code
 syntax = "proto3";
 
 package kv;
-option go_package = "omnidict/proto;kv";
 
-service KVStore {
-  rpc Put (PutRequest) returns (PutResponse);
-  rpc Get (GetRequest) returns (GetResponse);
-  rpc Join (JoinRequest) returns (JoinResponse);
+option go_package = "./kv";
+
+// The Omnidict service definition
+service OmnidictService {
+  // Basic key-value operations
+  rpc Put(PutRequest) returns (PutResponse);
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc Update(UpdateRequest) returns (UpdateResponse);
+  
+  // Key management operations
+  rpc Exists(ExistsRequest) returns (ExistsResponse);
+  rpc Keys(KeysRequest) returns (KeysResponse);
+  rpc Flush(FlushRequest) returns (FlushResponse);
+  
+  // TTL operations
+  rpc Expire(ExpireRequest) returns (ExpireResponse);
+  rpc TTL(TTLRequest) returns (TTLResponse);
+  
+  // Node information
+  rpc GetNodeInfo(NodeInfoRequest) returns (NodeInfoResponse);
+  rpc JoinCluster(JoinRequest) returns (JoinResponse);
+  rpc RemoveNode(RemoveNodeRequest) returns (RemoveNodeResponse);
+  
+  // Transaction operations
+  rpc BeginTransaction(BeginTxnRequest) returns (BeginTxnResponse);
+  rpc Prepare(PrepareRequest) returns (PrepareResponse);
+  rpc Commit(CommitRequest) returns (CommitResponse);
+  rpc Abort(AbortRequest) returns (AbortResponse);
 }
 
+// Put operation messages
 message PutRequest {
   string key = 1;
   string value = 2;
+  int64 ttl = 3; // Time to live in seconds, 0 means no expiration
 }
 
 message PutResponse {
   bool success = 1;
+  string message = 2;
 }
 
+// Get operation messages
 message GetRequest {
   string key = 1;
 }
 
 message GetResponse {
-  string value = 1;
-  bool found = 2;
+  bool found = 1;
+  string value = 2;
+}
+
+// Delete operation messages
+message DeleteRequest {
+  string key = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Update operation messages
+message UpdateRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message UpdateResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Exists operation messages
+message ExistsRequest {
+  string key = 1;
+}
+
+message ExistsResponse {
+  bool exists = 1;
+}
+
+// Keys operation messages
+message KeysRequest {
+  string pattern = 1; // Pattern to match keys, empty means all keys
+}
+
+message KeysResponse {
+  repeated string keys = 1;
+}
+
+// Flush operation messages
+message FlushRequest {
+  // Empty request
+}
+
+message FlushResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Expire operation messages
+message ExpireRequest {
+  string key = 1;
+  int64 ttl = 2; // Time to live in seconds
+}
+
+message ExpireResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// TTL operation messages
+message TTLRequest {
+  string key = 1;
+}
+
+message TTLResponse {
+  int64 ttl = 1; // Remaining time to live in seconds, -1 if no expiration, -2 if key doesn't exist
+}
+
+// Node info messages
+message NodeInfoRequest {
+  // Empty request
+}
+
+message NodeInfoResponse {
+  string node_id = 1;
+  string address = 2;
+  string status = 3;
+  int32 total_nodes = 4;
+  repeated string nodes = 5;
 }
 
 message JoinRequest {
-  string address = 1;
+  string node_id = 1;
+  string raft_address = 2;
 }
 
 message JoinResponse {
-  bool accepted = 1;
+  bool success = 1;
+  string error = 2;
+}
+
+message RemoveNodeRequest {
+  string node_id = 1;
+}
+
+message RemoveNodeResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message BeginTxnRequest {}
+message BeginTxnResponse {
+  string txn_id = 1;
+}
+
+message TxnOperation {
+  string key = 1;
+  string value = 2;
+  enum TxnOp {
+      SET = 0;
+      DELETE = 1;
+    }
+  TxnOp op = 3;
+}
+
+message PrepareRequest {
+  string txn_id = 1;
+  repeated TxnOperation operations = 2;
+}
+
+message PrepareResponse {
+  bool success = 1;
+}
+
+message CommitRequest {
+  string txn_id = 1;
+}
+
+message CommitResponse {
+  bool success = 1;
+}
+
+message AbortRequest {
+  string txn_id = 1;
+}
+
+message AbortResponse {
+  bool success = 1;
 }

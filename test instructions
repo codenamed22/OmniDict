@@ -1,0 +1,24 @@
+GENERATE THE GO PROTO FILES -
+protoc --go_out=./proto --go-grpc_out=./proto proto/kv.proto
+protoc --go_out=./proto --go-grpc_out=./proto proto/ring.proto
+
+BUILD THE BINARY FILE -
+go build -o <file name> main.go
+
+RUN THE SERVER (MULTIPLE IN DIFFERENT TERMINALS TO TEST CLUSTER)-
+./omnidict server 
+
+RUN THE CLIENT -
+./<file name> delete key
+./<file name> exists key
+./<file name> expire key time(in seconds)
+./<file name> flush
+./<file name> get key
+./<file name> keys
+./<file name> put key value
+./<file name> ttl key
+./<file name> update key value
+./<file name> <command> -h/--help (returns stuff like the man pages in your normal cmd - only has the usage as of now we can add these when we add the documentaion)
+
+if ./<file name> does not work try 'go run main.go' instead of that followed by the command and the parameters it take
+if there is any problem do tell us :D
