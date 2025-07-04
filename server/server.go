@@ -13,6 +13,7 @@ import (
 
 	"omnidict/gossip"
 	pb_kv "omnidict/proto/kv"
+	"omnidict/raftstore"
 	"omnidict/ring"
 	"omnidict/store"
 
@@ -196,59 +197,37 @@ func (s *OmnidictServer) Delete(ctx context.Context, req *pb_kv.DeleteRequest) (
 }
 
 func (s *OmnidictServer) Update(ctx context.Context, req *pb_kv.UpdateRequest) (*pb_kv.UpdateResponse, error) {
-	shardID, _, raftGroup, err := s.getShardResources(req.Key)
-	if err != nil {
-		return nil, err
-	}
+	shardID := s.Ring.GetShardID(req.Key)
+	raftNode := s.ShardRafts[shardID]
 
-	if raftGroup.State() != raft.Leader {
-		res, err := s.forwardToShardLeader(ctx, shardID, req)
-		if err != nil {
-			return nil, err
-		}
-		return res.(*pb_kv.UpdateResponse), nil
+	cmd := &raftstore.Command{
+		Op:    "update",
+		Key:   req.Key,
+		Value: req.Value,
 	}
-
-	cmd := Command{Op: "put", Key: req.Key, Value: req.Value}
 	data, _ := json.Marshal(cmd)
-	f := raftGroup.Apply(data, 5*time.Second)
+	f := raftNode.Apply(data, 5*time.Second)
 	if err := f.Error(); err != nil {
 		return &pb_kv.UpdateResponse{Success: false, Message: err.Error()}, nil
 	}
-	return &pb_kv.UpdateResponse{Success: true}, nil
+	return &pb_kv.UpdateResponse{Success: true, Message: "ok"}, nil
 }
 
 func (s *OmnidictServer) Expire(ctx context.Context, req *pb_kv.ExpireRequest) (*pb_kv.ExpireResponse, error) {
-	shardID, store, raftGroup, err := s.getShardResources(req.Key)
-	if err != nil {
-		return nil, err
-	}
+	shardID := s.Ring.GetShardID(req.Key)
+	raftNode := s.ShardRafts[shardID]
 
-	if raftGroup.State() != raft.Leader {
-		res, err := s.forwardToShardLeader(ctx, shardID, req)
-		if err != nil {
-			return nil, err
-		}
-		return res.(*pb_kv.ExpireResponse), nil
-	}
-
-	value, exists := store.Get(req.Key)
-	if !exists {
-		return &pb_kv.ExpireResponse{Success: false, Message: "key not found"}, nil
-	}
-
-	cmd := Command{
-		Op:    "put",
-		Key:   req.Key,
-		Value: value,
-		TTL:   req.Ttl,
+	cmd := &raftstore.Command{
+		Op:  "expire",
+		Key: req.Key,
+		TTL: int64(req.Ttl),
 	}
 	data, _ := json.Marshal(cmd)
-	f := raftGroup.Apply(data, 5*time.Second)
+	f := raftNode.Apply(data, 5*time.Second)
 	if err := f.Error(); err != nil {
 		return &pb_kv.ExpireResponse{Success: false, Message: err.Error()}, nil
 	}
-	return &pb_kv.ExpireResponse{Success: true}, nil
+	return &pb_kv.ExpireResponse{Success: true, Message: "ok"}, nil
 }
 
 func (s *OmnidictServer) Get(ctx context.Context, req *pb_kv.GetRequest) (*pb_kv.GetResponse, error) {
@@ -398,11 +377,15 @@ func (s *OmnidictServer) RemoveNode(
 }
 
 func (s *OmnidictServer) Flush(ctx context.Context, req *pb_kv.FlushRequest) (*pb_kv.FlushResponse, error) {
-	for shardID, store := range s.ShardStores {
-		store.Flush()
-		log.Printf("Flushed shard %s", shardID)
+	for shardID, raftNode := range s.ShardRafts {
+		cmd := &raftstore.Command{Op: "flush"}
+		data, _ := json.Marshal(cmd)
+		f := raftNode.Apply(data, 5*time.Second)
+		if err := f.Error(); err != nil {
+			return &pb_kv.FlushResponse{Success: false, Message: fmt.Sprintf("Shard %s: %v", shardID, err)}, nil
+		}
 	}
-	return &pb_kv.FlushResponse{Success: true}, nil
+	return &pb_kv.FlushResponse{Success: true, Message: "ok"}, nil
 }
 
 func (s *OmnidictServer) GetNodeInfo(ctx context.Context, req *pb_kv.NodeInfoRequest) (*pb_kv.NodeInfoResponse, error) {

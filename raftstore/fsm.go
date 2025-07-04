@@ -45,10 +45,15 @@ func (f *FSM) Apply(l *raft.Log) interface{} {
 
 	switch cmd.Op {
 	case "put":
-		ttl := time.Duration(cmd.TTL) * time.Second
-		f.store.Put(cmd.Key, cmd.Value, ttl)
+		f.store.Put(cmd.Key, cmd.Value, time.Duration(cmd.TTL)*time.Second)
 	case "delete":
 		f.store.Delete(cmd.Key)
+	case "update":
+		f.store.Update(cmd.Key, cmd.Value)
+	case "expire":
+		f.store.Expire(cmd.Key, time.Duration(cmd.TTL)*time.Second)
+	case "flush":
+		f.store.Flush()
 	case "prepare":
 		f.store.StageOperations(cmd.TxnID, cmd.Ops)
 	case "commit":
